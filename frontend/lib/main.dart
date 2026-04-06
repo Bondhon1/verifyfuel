@@ -1,9 +1,12 @@
 import 'dart:convert';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:google_mlkit_text_recognition/google_mlkit_text_recognition.dart';
 import 'package:http/http.dart' as http;
 import 'package:intl/intl.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {
@@ -1023,7 +1026,6 @@ class _AuthViewState extends State<AuthView> {
               items: const [
                 DropdownMenuItem(value: 'owner', child: Text('🚗 Vehicle Owner')),
                 DropdownMenuItem(value: 'operator', child: Text('⛽ Pump Operator')),
-                DropdownMenuItem(value: 'admin', child: Text('📊 Admin')),
               ],
               onChanged: (value) => setState(() => _role = value ?? 'owner'),
               underline: const SizedBox(),
@@ -1160,12 +1162,16 @@ class OperatorDashboard extends StatefulWidget {
 }
 
 class _OperatorDashboardState extends State<OperatorDashboard> {
+  final _imagePicker = ImagePicker();
   final _plateCtrl = TextEditingController();
   final _litersCtrl = TextEditingController(text: '20');
   final _stationCtrl = TextEditingController(text: 'Main Pump');
   String _fuelType = 'Petrol';
   EligibilityModel? _eligibility;
   bool _loading = false;
+  bool _scanning = false;
+
+  bool get _busy => _loading || _scanning;
 
   @override
   void dispose() {
@@ -1222,6 +1228,69 @@ class _OperatorDashboardState extends State<OperatorDashboard> {
     }
   }
 
+  Future<void> _scanPlateFromCamera() async {
+    if (kIsWeb) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Camera scan is available in the mobile app.'),
+        ),
+      );
+      return;
+    }
+
+    setState(() => _scanning = true);
+    try {
+      final pickedImage = await _imagePicker.pickImage(
+        source: ImageSource.camera,
+        imageQuality: 90,
+      );
+
+      if (pickedImage == null) {
+        return;
+      }
+
+      final inputImage = InputImage.fromFilePath(pickedImage.path);
+      final recognizer = TextRecognizer(script: TextRecognitionScript.latin);
+      final recognizedText = await recognizer.processImage(inputImage);
+      recognizer.close();
+
+      final plateText = _extractPlateText(recognizedText.text);
+      if (plateText.isEmpty) {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('No readable plate text found.')),
+        );
+        return;
+      }
+
+      setState(() {
+        _plateCtrl.text = plateText;
+        _eligibility = null;
+      });
+
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Plate scanned: $plateText')),
+      );
+      await _checkEligibility();
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Scan failed: $e')),
+      );
+    } finally {
+      if (mounted) {
+        setState(() => _scanning = false);
+      }
+    }
+  }
+
+  String _extractPlateText(String rawText) {
+    final cleaned = rawText.replaceAll(RegExp(r'\s+'), ' ').trim();
+    return cleaned.toUpperCase();
+  }
+
   @override
   Widget build(BuildContext context) {
     final formatter = DateFormat('dd MMM yyyy, hh:mm a');
@@ -1230,12 +1299,62 @@ class _OperatorDashboardState extends State<OperatorDashboard> {
       padding: const EdgeInsets.all(18),
       child: Column(
         children: [
-          _KpiStrip(
-            items: const [
-              _KpiData(title: 'Verification', value: 'Live OCR Flow', icon: Icons.document_scanner_rounded),
-              _KpiData(title: 'Eligibility Rule', value: '72 Hours', icon: Icons.lock_clock_rounded),
-              _KpiData(title: 'Distribution', value: 'Slot-based', icon: Icons.schedule_rounded),
-            ],
+          Container(
+            width: double.infinity,
+            decoration: BoxDecoration(
+              gradient: const LinearGradient(
+                colors: [Color(0xFF0E7A6A), Color(0xFF13A38E)],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+              borderRadius: BorderRadius.circular(24),
+              boxShadow: [
+                BoxShadow(
+                  color: const Color(0xFF0E7A6A).withOpacity(0.18),
+                  blurRadius: 24,
+                  offset: const Offset(0, 10),
+                ),
+              ],
+            ),
+            padding: const EdgeInsets.all(18),
+            child: Row(
+              children: [
+                Container(
+                  width: 56,
+                  height: 56,
+                  decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(0.16),
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  child: const Icon(Icons.document_scanner_rounded, color: Colors.white, size: 30),
+                ),
+                const SizedBox(width: 14),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: const [
+                      Text(
+                        'Operator Scanner',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 22,
+                          fontWeight: FontWeight.w900,
+                        ),
+                      ),
+                      SizedBox(height: 4),
+                      Text(
+                        'Scan a vehicle plate, verify eligibility, and record fuel.',
+                        style: TextStyle(
+                          color: Colors.white70,
+                          fontSize: 13,
+                          height: 1.3,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
           ),
           const SizedBox(height: 14),
           Card(
@@ -1244,20 +1363,58 @@ class _OperatorDashboardState extends State<OperatorDashboard> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text('Operator Console', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 24)),
-                  const SizedBox(height: 6),
+                  Row(
+                    children: [
+                      Container(
+                        width: 44,
+                        height: 44,
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFE7F4F1),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: const Icon(Icons.qr_code_scanner_rounded, color: Color(0xFF0E7A6A)),
+                      ),
+                      const SizedBox(width: 12),
+                      const Expanded(
+                        child: Text('Operator Console', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 24)),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
                   Text(
-                    'Scan plate, verify eligibility, and record fuel in one workflow.',
+                    'Use the scanner button first, then confirm eligibility and record fuel.',
                     style: TextStyle(color: Colors.blueGrey.shade700),
                   ),
                   const SizedBox(height: 14),
                   TextField(
                     controller: _plateCtrl,
-                    decoration: const InputDecoration(
+                    decoration: InputDecoration(
                       labelText: 'Vehicle Plate Number',
                       hintText: 'DHAKA-METRO-12-3456',
-                      prefixIcon: Icon(Icons.pin_outlined),
+                      prefixIcon: const Icon(Icons.pin_outlined),
+                      suffixIcon: IconButton(
+                        tooltip: 'Scan plate',
+                        onPressed: _busy ? null : _scanPlateFromCamera,
+                        icon: const Icon(Icons.document_scanner_rounded),
+                      ),
                     ),
+                  ),
+                  const SizedBox(height: 12),
+                  Wrap(
+                    spacing: 10,
+                    runSpacing: 10,
+                    children: [
+                      FilledButton.tonalIcon(
+                        onPressed: _busy ? null : _scanPlateFromCamera,
+                        icon: const Icon(Icons.document_scanner_rounded),
+                        label: const Text('Scan Plate'),
+                      ),
+                      FilledButton.icon(
+                        onPressed: _loading ? null : _checkEligibility,
+                        icon: const Icon(Icons.verified_rounded),
+                        label: const Text('Check Eligibility'),
+                      ),
+                    ],
                   ),
                   const SizedBox(height: 12),
                   Row(
@@ -1296,11 +1453,6 @@ class _OperatorDashboardState extends State<OperatorDashboard> {
                   Wrap(
                     spacing: 10,
                     children: [
-                      FilledButton.icon(
-                        onPressed: _loading ? null : _checkEligibility,
-                        icon: const Icon(Icons.verified_rounded),
-                        label: const Text('Check Eligibility'),
-                      ),
                       FilledButton.tonalIcon(
                         onPressed: _loading ? null : _recordFuel,
                         icon: const Icon(Icons.save_alt_rounded),
@@ -1435,26 +1587,62 @@ class _OwnerDashboardState extends State<OwnerDashboard> {
       padding: const EdgeInsets.all(18),
       child: Column(
         children: [
-          _KpiStrip(
-            items: [
-              _KpiData(
-                title: 'Eligibility Rule',
-                value: 'Every 72h',
-                icon: Icons.av_timer_rounded,
+          Container(
+            width: double.infinity,
+            decoration: BoxDecoration(
+              gradient: const LinearGradient(
+                colors: [Color(0xFF0E7A6A), Color(0xFF13A38E)],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
               ),
-              _KpiData(
-                title: 'Reminder',
-                value: _status?.hoursRemaining != null
-                    ? '${_status!.hoursRemaining}h left'
-                    : 'Live Status',
-                icon: Icons.notifications_active_rounded,
-              ),
-              const _KpiData(
-                title: 'Access',
-                value: 'Own Vehicles',
-                icon: Icons.verified_user_rounded,
-              ),
-            ],
+              borderRadius: BorderRadius.circular(24),
+              boxShadow: [
+                BoxShadow(
+                  color: const Color(0xFF0E7A6A).withOpacity(0.18),
+                  blurRadius: 24,
+                  offset: const Offset(0, 10),
+                ),
+              ],
+            ),
+            padding: const EdgeInsets.all(18),
+            child: Row(
+              children: [
+                Container(
+                  width: 56,
+                  height: 56,
+                  decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(0.16),
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  child: const Icon(Icons.document_scanner_rounded, color: Colors.white, size: 30),
+                ),
+                const SizedBox(width: 14),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: const [
+                      Text(
+                        'Scanner Mode',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 22,
+                          fontWeight: FontWeight.w900,
+                        ),
+                      ),
+                      SizedBox(height: 4),
+                      Text(
+                        'Scan a plate to check status and manage fuel access.',
+                        style: TextStyle(
+                          color: Colors.white70,
+                          fontSize: 13,
+                          height: 1.3,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
           ),
           const SizedBox(height: 14),
           Card(
@@ -1463,16 +1651,51 @@ class _OwnerDashboardState extends State<OwnerDashboard> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text('Vehicle Owner Console', style: TextStyle(fontSize: 24, fontWeight: FontWeight.w800)),
-                  const SizedBox(height: 6),
+                  Row(
+                    children: [
+                      Container(
+                        width: 44,
+                        height: 44,
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFE7F4F1),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: const Icon(Icons.qr_code_scanner_rounded, color: Color(0xFF0E7A6A)),
+                      ),
+                      const SizedBox(width: 12),
+                      const Expanded(
+                        child: Text(
+                          'Vehicle Owner Console',
+                          style: TextStyle(fontSize: 24, fontWeight: FontWeight.w800),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
                   Text(
-                    'Add vehicles, monitor next fuel slot, and track transparency in real time.',
+                    'Add vehicles, scan a plate, and track fuel eligibility in real time.',
                     style: TextStyle(color: Colors.blueGrey.shade700),
                   ),
                   const SizedBox(height: 12),
                   TextField(
                     controller: _plateCtrl,
-                    decoration: const InputDecoration(labelText: 'Plate Number'),
+                    decoration: InputDecoration(
+                      labelText: 'Plate Number',
+                      prefixIcon: const Icon(Icons.pin_outlined),
+                      suffixIcon: IconButton(
+                        tooltip: 'Scan plate',
+                        onPressed: () async {
+                          if (mounted) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text('Use the scanner button in the operator console for camera OCR.'),
+                              ),
+                            );
+                          }
+                        },
+                        icon: const Icon(Icons.document_scanner_rounded),
+                      ),
+                    ),
                   ),
                   const SizedBox(height: 10),
                   Row(
