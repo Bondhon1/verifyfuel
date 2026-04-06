@@ -14,7 +14,7 @@ def create_vehicle(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_active_user)
 ):
-    """Register a new vehicle"""
+    """Register a new vehicle (registered owner or unknown vehicle)"""
     normalized_plate = vehicle.plate_number.strip().upper()
 
     # Check if plate number already exists
@@ -28,6 +28,33 @@ def create_vehicle(
             detail=f"Vehicle with plate number {normalized_plate} already registered"
         )
 
+    # Handle unknown vehicles (no app user)
+    if not vehicle.is_registered_owner:
+        # Unknown vehicle - require owner name and phone
+        if not vehicle.owner_name or not vehicle.owner_phone:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="For unknown vehicles, owner_name and owner_phone are required"
+            )
+        
+        # Create unknown vehicle
+        db_vehicle = Vehicle(
+            plate_number=normalized_plate,
+            owner_id=None,  # No app user
+            owner_name=vehicle.owner_name,
+            owner_phone=vehicle.owner_phone,
+            is_registered_owner=False,
+            vehicle_type=vehicle.vehicle_type,
+            make=vehicle.make,
+            model=vehicle.model,
+            year=vehicle.year,
+        )
+        db.add(db_vehicle)
+        db.commit()
+        db.refresh(db_vehicle)
+        return db_vehicle
+
+    # Handle registered owner vehicles
     owner_id = vehicle.owner_id
     if current_user.role == UserRole.OWNER:
         owner_id = current_user.id
@@ -35,7 +62,7 @@ def create_vehicle(
         if owner_id is None:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Operator must provide owner_id"
+                detail="Operator must provide owner_id for registered vehicles"
             )
     elif current_user.role != UserRole.ADMIN:
         raise HTTPException(
@@ -46,13 +73,14 @@ def create_vehicle(
     if owner_id is None:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="owner_id is required"
+            detail="owner_id is required for registered vehicles"
         )
     
-    # Create vehicle
+    # Create registered vehicle
     db_vehicle = Vehicle(
         plate_number=normalized_plate,
         owner_id=owner_id,
+        is_registered_owner=True,
         vehicle_type=vehicle.vehicle_type,
         make=vehicle.make,
         model=vehicle.model,
@@ -99,8 +127,10 @@ def list_vehicles(
 ):
     """List all vehicles (admin/operator) or user's vehicles (owner)"""
     if current_user.role in [UserRole.ADMIN, UserRole.OPERATOR]:
+        # Include both registered and unknown vehicles
         vehicles = db.query(Vehicle).offset(skip).limit(limit).all()
     else:
+        # Owners only see their own vehicles (where owner_id matches)
         vehicles = db.query(Vehicle).filter(
             Vehicle.owner_id == current_user.id
         ).offset(skip).limit(limit).all()

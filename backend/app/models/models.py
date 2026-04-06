@@ -15,7 +15,7 @@ class User(Base):
     id = Column(Integer, primary_key=True, index=True)
     username = Column(String, unique=True, index=True, nullable=False)
     email = Column(String, unique=True, index=True, nullable=False)
-    phone = Column(String, unique=True, index=True)
+    phone = Column(String, index=True)  # Removed unique constraint
     hashed_password = Column(String, nullable=False)
     full_name = Column(String)
     role = Column(Enum(UserRole), nullable=False)
@@ -32,12 +32,18 @@ class Vehicle(Base):
     
     id = Column(Integer, primary_key=True, index=True)
     plate_number = Column(String, unique=True, index=True, nullable=False)
-    owner_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    owner_id = Column(Integer, ForeignKey("users.id"), nullable=True)  # Nullable for unknown vehicles
     vehicle_type = Column(String)  # Car, Motorcycle, Truck, etc.
     make = Column(String)
     model = Column(String)
     year = Column(Integer)
     is_active = Column(Boolean, default=True)
+    
+    # For unknown vehicles (no app user)
+    owner_name = Column(String, nullable=True)  # Owner name if not registered
+    owner_phone = Column(String, nullable=True)  # Owner phone if not registered
+    is_registered_owner = Column(Boolean, default=True)  # False for unknown vehicles
+    
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     

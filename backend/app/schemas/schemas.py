@@ -41,10 +41,16 @@ class VehicleBase(BaseModel):
 
 class VehicleCreate(VehicleBase):
     owner_id: Optional[int] = None
+    owner_name: Optional[str] = None  # For unknown vehicles
+    owner_phone: Optional[str] = None  # For unknown vehicles
+    is_registered_owner: bool = True  # False for unknown vehicles
 
 class Vehicle(VehicleBase):
     id: int
-    owner_id: int
+    owner_id: Optional[int] = None  # Nullable for unknown vehicles
+    owner_name: Optional[str] = None
+    owner_phone: Optional[str] = None
+    is_registered_owner: bool
     is_active: bool
     created_at: datetime
     
