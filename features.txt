@@ -1,0 +1,65 @@
+Dear Sir,
+I hope you are doing well.
+I’m sharing a clear overview of the Automated Fuel Management System, highlighting that the system will be built as a single mobile app for two user types, Pump Operators and Vehicle Owners. This approach ensures to control fuel distribution efficiently, prevent misuse, and reduce crowd congestion at fuel stations through automation and smart scheduling.
+It introduces:
+Real-time vehicle verification (via number plate OCR)
+Automated 3-day eligibility rule
+Smart time-slot based scheduling
+User transparency through a dedicated app
+
+How the System Works 
+1. At the Fuel Pump (Operator Side)
+Operator scans the vehicle’s number plate using the mobile app
+OCR automatically extracts the plate number
+System instantly checks the database
+Based on rules:
+✅ Allowed → Fuel is given
+❌ Denied → If fuel was taken within last 72 hours
+If approved, the system automatically assigns the next fuel schedule
+2. 3-Day Rule Enforcement
+Every vehicle must wait minimum 72 hours between fuel entries
+The system automatically checks the latest record
+Ensures fair distribution and prevents repeated misuse
+3. Smart Scheduling System 
+After each successful fuel entry:
+The system assigns:
+Next Visit Date (after 3 days)
+Specific Time Slot
+Example:
+Fuel taken at 11 AM → Next slot: 10 AM – 1 PM (after 3 days)
+4. Vehicle Owner
+Vehicle owners can log in or register using the same app:
+Scan or manually enter their plate number
+View last fuel entry
+See next eligible time and assigned slot
+Receive notifications and reminders
+Countdown timer shows: “Next fuel in X days/hours”
+5. Admin Dashboard
+A centralized dashboard will provide:
+Daily fuel distribution reports
+Violation attempts tracking
+Schedule monitoring
+Search by vehicle number
+Technical Architecture
+Flutter Mobile App - Frontend
+Cross-platform (Android & iOS)
+Python (FastAPI) - Backend
+Google ML Kit - OCR Engine
+Fast and accurate number plate recognition
+Works even in low connectivity (offline support)
+PostgreSQL - Database
+Future Scalability
+The system is designed to expand with:
+Multi-pump support
+Dynamic load balancing (auto slot adjustment)
+AI-based fraud detection
+Offline-first synchronization
+Multi Language Support (By default Bangla)
+We have started building a demo version, and we will share it with you by tomorrow. This will let you see how both user types interact within the same app.
+Best regards,
+MD Sadman Hasin Khan Jahen
+Developer at OAi Venture
+Final Semester Student, CSE Department, Brac University
+Atharabari, Ishwarganj, Mymensingh
+Contact: 0199508664
+
