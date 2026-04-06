@@ -40,7 +40,7 @@ class VehicleBase(BaseModel):
     year: Optional[int] = None
 
 class VehicleCreate(VehicleBase):
-    owner_id: int
+    owner_id: Optional[int] = None
 
 class Vehicle(VehicleBase):
     id: int
@@ -60,7 +60,7 @@ class FuelEntryBase(BaseModel):
     notes: Optional[str] = None
 
 class FuelEntryCreate(FuelEntryBase):
-    operator_id: int
+    operator_id: Optional[int] = None
 
 class FuelEntry(FuelEntryBase):
     id: int
@@ -92,3 +92,20 @@ class Token(BaseModel):
 
 class TokenData(BaseModel):
     username: Optional[str] = None
+
+
+class ScanFuelRequest(BaseModel):
+    plate_number: str
+    amount_liters: int
+    fuel_type: str = "Petrol"
+    station_name: Optional[str] = None
+    notes: Optional[str] = None
+
+
+class DashboardSummary(BaseModel):
+    total_vehicles: int
+    total_users: int
+    total_fuel_entries: int
+    today_fuel_entries: int
+    eligible_vehicles: int
+    denied_vehicles: int

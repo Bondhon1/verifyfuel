@@ -3,7 +3,7 @@ from sqlalchemy.orm import Session
 from typing import List
 from app.core.database import get_db
 from app.core.security import get_current_active_user
-from app.models.models import Vehicle, User
+from app.models.models import Vehicle, User, UserRole
 from app.schemas.schemas import VehicleCreate, Vehicle as VehicleSchema
 
 router = APIRouter(prefix="/vehicles", tags=["Vehicles"])
@@ -15,19 +15,49 @@ def create_vehicle(
     current_user: User = Depends(get_current_active_user)
 ):
     """Register a new vehicle"""
+    normalized_plate = vehicle.plate_number.strip().upper()
+
     # Check if plate number already exists
     db_vehicle = db.query(Vehicle).filter(
-        Vehicle.plate_number == vehicle.plate_number
+        Vehicle.plate_number == normalized_plate
     ).first()
     
     if db_vehicle:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"Vehicle with plate number {vehicle.plate_number} already registered"
+            detail=f"Vehicle with plate number {normalized_plate} already registered"
+        )
+
+    owner_id = vehicle.owner_id
+    if current_user.role == UserRole.OWNER:
+        owner_id = current_user.id
+    elif current_user.role == UserRole.OPERATOR:
+        if owner_id is None:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Operator must provide owner_id"
+            )
+    elif current_user.role != UserRole.ADMIN:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Not allowed to register vehicles"
+        )
+
+    if owner_id is None:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="owner_id is required"
         )
     
     # Create vehicle
-    db_vehicle = Vehicle(**vehicle.dict())
+    db_vehicle = Vehicle(
+        plate_number=normalized_plate,
+        owner_id=owner_id,
+        vehicle_type=vehicle.vehicle_type,
+        make=vehicle.make,
+        model=vehicle.model,
+        year=vehicle.year,
+    )
     db.add(db_vehicle)
     db.commit()
     db.refresh(db_vehicle)
@@ -41,14 +71,21 @@ def get_vehicle(
     current_user: User = Depends(get_current_active_user)
 ):
     """Get vehicle by plate number"""
+    normalized_plate = plate_number.strip().upper()
     vehicle = db.query(Vehicle).filter(
-        Vehicle.plate_number == plate_number
+        Vehicle.plate_number == normalized_plate
     ).first()
     
     if not vehicle:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Vehicle not found: {plate_number}"
+            detail=f"Vehicle not found: {normalized_plate}"
+        )
+
+    if current_user.role == UserRole.OWNER and vehicle.owner_id != current_user.id:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="You can only view your own vehicles"
         )
     
     return vehicle
@@ -61,11 +98,23 @@ def list_vehicles(
     current_user: User = Depends(get_current_active_user)
 ):
     """List all vehicles (admin/operator) or user's vehicles (owner)"""
-    if current_user.role in ["admin", "operator"]:
+    if current_user.role in [UserRole.ADMIN, UserRole.OPERATOR]:
         vehicles = db.query(Vehicle).offset(skip).limit(limit).all()
     else:
         vehicles = db.query(Vehicle).filter(
             Vehicle.owner_id == current_user.id
         ).offset(skip).limit(limit).all()
     
+    return vehicles
+
+
+@router.get("/my", response_model=List[VehicleSchema])
+def my_vehicles(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_active_user)
+):
+    """Get all vehicles owned by the logged-in owner"""
+    vehicles = db.query(Vehicle).filter(
+        Vehicle.owner_id == current_user.id
+    ).order_by(Vehicle.created_at.desc()).all()
     return vehicles
