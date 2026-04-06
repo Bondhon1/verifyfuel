@@ -19,7 +19,6 @@ verifyfuel/
 │   │   ├── services/  # Business logic
 │   │   └── core/      # Core configuration
 │   └── main.py        # FastAPI entry point
-└── docker-compose.yml # Docker services configuration
 ```
 
 ## Features
@@ -41,7 +40,7 @@ verifyfuel/
 
 ### Backend
 - Python FastAPI
-- PostgreSQL
+- NeonDB PostgreSQL
 - SQLAlchemy
 - JWT Authentication
 

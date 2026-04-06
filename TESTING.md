@@ -6,11 +6,10 @@ The backend is fully functional. Here's a step-by-step testing guide.
 
 ## Prerequisites
 ```bash
-# Start the services
-docker-compose up -d
-
-# Verify services are running
-docker-compose ps
+# Start the backend server
+cd backend
+venv\Scripts\activate  # Windows
+uvicorn main:app --reload --port 8000
 ```
 
 ## Test Sequence
@@ -205,10 +204,23 @@ curl -X POST http://localhost:8000/fuel/entries -H "Authorization: Bearer YOUR_T
 
 ## Database Inspection
 
-### Connect to PostgreSQL
-```bash
-docker exec -it verifyfuel_postgres psql -U verifyfuel -d verifyfuel_db
+### Connect to NeonDB
+You can use any PostgreSQL client to connect to your NeonDB database:
+
+**Connection Details from .env:**
 ```
+DATABASE_URL=postgresql://username:password@ep-xxxx.region.aws.neon.tech/neondb?sslmode=require
+```
+
+**Using psql (if installed):**
+```bash
+psql "postgresql://username:password@ep-xxxx.region.aws.neon.tech/neondb?sslmode=require"
+```
+
+**Or use NeonDB Console:**
+- Visit https://console.neon.tech/
+- Navigate to your project
+- Use the SQL Editor
 
 ### Check Data
 ```sql
@@ -256,26 +268,17 @@ ORDER BY fe.entry_datetime DESC;
 ## Cleanup & Reset
 
 ### Reset Database (Start Fresh)
-```bash
-# Stop and remove containers + volumes
-docker-compose down -v
-
-# Start again
-docker-compose up -d
-
-# All data will be cleared
-```
+To reset the database, you can:
+1. Drop all tables from NeonDB Console
+2. Or create a new NeonDB database
+3. Update your `.env` with the new connection string
+4. Restart the backend server - tables will be recreated automatically
 
 ### View Logs
 ```bash
-# Backend logs
-docker-compose logs -f backend
-
-# Database logs
-docker-compose logs -f postgres
-
-# All logs
-docker-compose logs -f
+# Backend logs are shown in the terminal where uvicorn is running
+# Or redirect output to a file:
+uvicorn main:app --reload --port 8000 > backend.log 2>&1
 ```
 
 ## Next: Frontend Testing
@@ -291,4 +294,4 @@ Once Phase 3 is complete, you'll be able to:
 ---
 
 **Current Status**: Backend fully functional and ready for testing! 🎉  
-**Start**: `docker-compose up -d` → http://localhost:8000/docs
+**Start**: `uvicorn main:app --reload --port 8000` → http://localhost:8000/docs

@@ -1,26 +1,34 @@
 # Quick Start Guide
 
 ## Prerequisites
-- Docker Desktop installed and running
+- Python 3.11+ installed
 - Flutter SDK installed (for frontend development)
+- NeonDB account (free tier: https://neon.tech/)
 
-## 1. Start the Backend (Fastest Way)
+## 1. Setup Backend
 
 ```bash
 # Navigate to project directory
-cd f:\tmp\projects\verifyfuel
+cd f:\tmp\projects\verifyfuel\backend
+
+# Create virtual environment
+python -m venv venv
+
+# Activate virtual environment
+venv\Scripts\activate  # Windows
+# source venv/bin/activate  # Mac/Linux
+
+# Install dependencies
+pip install -r requirements.txt
 
 # Create environment file
-copy backend\.env.example backend\.env
+copy .env.example .env
 
-# Start PostgreSQL and Backend with Docker
-docker-compose up -d
+# Edit .env and add your NeonDB connection string
+# DATABASE_URL=postgresql://username:password@ep-xxxx.region.aws.neon.tech/neondb?sslmode=require
 
-# Check if services are running
-docker-compose ps
-
-# View logs
-docker-compose logs -f backend
+# Run the backend
+uvicorn main:app --reload --port 8000
 ```
 
 The API will be available at:
@@ -137,38 +145,21 @@ docker-compose down -v
 
 ## Troubleshooting
 
-### Docker Issues
+### Backend Issues
 ```bash
-# Restart services
-docker-compose restart
+# Check if server is running
+curl http://localhost:8000/health
 
-# Rebuild backend image
-docker-compose build backend
+# View server output in terminal
 
-# View backend logs
-docker-compose logs backend
-
-# View PostgreSQL logs
-docker-compose logs postgres
+# Restart server
+# Press Ctrl+C to stop, then run uvicorn command again
 ```
 
-### Database Issues
-```bash
-# Connect to PostgreSQL
-docker exec -it verifyfuel_postgres psql -U verifyfuel -d verifyfuel_db
-
-# List tables
-\dt
-
-# View users
-SELECT * FROM users;
-
-# View vehicles
-SELECT * FROM vehicles;
-
-# Exit
-\q
-```
+### Database Issues (NeonDB)
+- Check your connection string in `.env`
+- Verify NeonDB is accessible at https://console.neon.tech/
+- Ensure `?sslmode=require` is in the connection string
 
 ### Flutter Issues
 ```bash
@@ -196,7 +187,7 @@ Import this collection to test all endpoints:
 
 ## Development Workflow
 
-1. **Backend changes:** Edit files in `backend/` → Docker auto-reloads
+1. **Backend changes:** Edit files in `backend/` → Server auto-reloads (with --reload flag)
 2. **Frontend changes:** Edit files in `frontend/lib/` → Flutter hot reload
 3. **Database changes:** Create Alembic migrations
 
