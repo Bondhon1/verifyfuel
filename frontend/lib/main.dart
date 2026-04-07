@@ -1,4 +1,7 @@
+import 'dart:async';
 import 'dart:convert';
+import 'dart:typed_data';
+import 'dart:ui' as ui;
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -9,11 +12,17 @@ import 'package:intl/intl.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'web_test_image_input_stub.dart'
+    if (dart.library.html) 'web_test_image_input_web.dart';
+import 'web_test_image_input_types.dart';
+
 void main() {
   runApp(const VerifyFuelApp());
 }
 
-const String _apiBaseUrlFromEnvironment = String.fromEnvironment('API_BASE_URL');
+const String _apiBaseUrlFromEnvironment = String.fromEnvironment(
+  'API_BASE_URL',
+);
 
 String get apiBaseUrl {
   if (_apiBaseUrlFromEnvironment.isNotEmpty) {
@@ -208,15 +217,15 @@ class ApiClient {
     throw Exception(detail);
   }
 
-  Future<String> login({required String username, required String password}) async {
+  Future<String> login({
+    required String username,
+    required String password,
+  }) async {
     final uri = Uri.parse('$apiBaseUrl/auth/login');
     final response = await http.post(
       uri,
       headers: {'Content-Type': 'application/x-www-form-urlencoded'},
-      body: {
-        'username': username,
-        'password': password,
-      },
+      body: {'username': username, 'password': password},
     );
     if (response.statusCode != 200) {
       _throwApiError(response);
@@ -379,10 +388,10 @@ class AppState {
   });
 
   const AppState.initial()
-      : isLoading = false,
-        token = null,
-        user = null,
-        error = null;
+    : isLoading = false,
+      token = null,
+      user = null,
+      error = null;
 
   AppState copyWith({
     bool? isLoading,
@@ -428,14 +437,19 @@ class AppController extends ChangeNotifier {
     final api = ApiClient(token: storedToken);
     try {
       final user = await api.getMe();
-      _update(_state.copyWith(isLoading: false, token: storedToken, user: user));
+      _update(
+        _state.copyWith(isLoading: false, token: storedToken, user: user),
+      );
     } catch (_) {
       await prefs.remove(_tokenKey);
       _update(_state.copyWith(isLoading: false, token: null, user: null));
     }
   }
 
-  Future<void> signIn({required String username, required String password}) async {
+  Future<void> signIn({
+    required String username,
+    required String password,
+  }) async {
     _update(_state.copyWith(isLoading: true, clearError: true));
     try {
       final token = await const ApiClient().login(
@@ -523,36 +537,38 @@ class _VerifyFuelAppState extends State<VerifyFuelApp> {
         );
 
         return MaterialApp(
-      debugShowCheckedModeBanner: false,
-      title: 'VerifyFuel',
-      theme: ThemeData(
-        useMaterial3: true,
-        colorScheme: lightScheme,
-        textTheme: GoogleFonts.soraTextTheme(),
-        scaffoldBackgroundColor: const Color(0xFFF2F6F8),
-        cardTheme: CardThemeData(
-          elevation: 0,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
-          color: Colors.white,
-        ),
-        inputDecorationTheme: InputDecorationTheme(
-          filled: true,
-          fillColor: Colors.white,
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(14),
-            borderSide: BorderSide.none,
+          debugShowCheckedModeBanner: false,
+          title: 'VerifyFuel',
+          theme: ThemeData(
+            useMaterial3: true,
+            colorScheme: lightScheme,
+            textTheme: GoogleFonts.soraTextTheme(),
+            scaffoldBackgroundColor: const Color(0xFFF2F6F8),
+            cardTheme: CardThemeData(
+              elevation: 0,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(18),
+              ),
+              color: Colors.white,
+            ),
+            inputDecorationTheme: InputDecorationTheme(
+              filled: true,
+              fillColor: Colors.white,
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(14),
+                borderSide: BorderSide.none,
+              ),
+            ),
           ),
-        ),
-      ),
           home: state.isLoading
               ? const SplashView()
               : state.user == null
-                  ? AuthView(controller: _controller, state: state)
-                  : HomeShell(
-                      user: state.user!,
-                      token: state.token!,
-                      controller: _controller,
-                    ),
+              ? AuthView(controller: _controller, state: state)
+              : HomeShell(
+                  user: state.user!,
+                  token: state.token!,
+                  controller: _controller,
+                ),
         );
       },
     );
@@ -577,7 +593,11 @@ class SplashView extends StatelessWidget {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(Icons.local_gas_station_rounded, size: 64, color: Colors.white),
+              Icon(
+                Icons.local_gas_station_rounded,
+                size: 64,
+                color: Colors.white,
+              ),
               SizedBox(height: 14),
               Text(
                 'VerifyFuel',
@@ -601,11 +621,7 @@ class AuthView extends StatefulWidget {
   final AppController controller;
   final AppState state;
 
-  const AuthView({
-    super.key,
-    required this.controller,
-    required this.state,
-  });
+  const AuthView({super.key, required this.controller, required this.state});
 
   @override
   State<AuthView> createState() => _AuthViewState();
@@ -710,12 +726,19 @@ class _AuthViewState extends State<AuthView> {
                         padding: const EdgeInsets.all(14),
                         decoration: BoxDecoration(
                           color: const Color(0xFFFFE8E6),
-                          border: Border.all(color: const Color(0xFFFF6B54), width: 1),
+                          border: Border.all(
+                            color: const Color(0xFFFF6B54),
+                            width: 1,
+                          ),
                           borderRadius: BorderRadius.circular(12),
                         ),
                         child: Row(
                           children: [
-                            const Icon(Icons.error_outline_rounded, color: Color(0xFFFF6B54), size: 20),
+                            const Icon(
+                              Icons.error_outline_rounded,
+                              color: Color(0xFFFF6B54),
+                              size: 20,
+                            ),
                             const SizedBox(width: 12),
                             Expanded(
                               child: Text(
@@ -775,24 +798,39 @@ class _AuthViewState extends State<AuthView> {
               color: const Color(0xFFE7F4F1),
               borderRadius: BorderRadius.circular(12),
             ),
-            child: const Icon(Icons.login_rounded, color: Color(0xFF0E7A6A), size: 24),
+            child: const Icon(
+              Icons.login_rounded,
+              color: Color(0xFF0E7A6A),
+              size: 24,
+            ),
           ),
           const SizedBox(height: 16),
           const Text(
             'Sign In',
-            style: TextStyle(fontSize: 24, fontWeight: FontWeight.w900, color: Color(0xFF1A1A1A)),
+            style: TextStyle(
+              fontSize: 24,
+              fontWeight: FontWeight.w900,
+              color: Color(0xFF1A1A1A),
+            ),
           ),
           const SizedBox(height: 8),
           Text(
             'Access your account',
-            style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500, color: Colors.blueGrey.shade600),
+            style: TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.w500,
+              color: Colors.blueGrey.shade600,
+            ),
           ),
           const SizedBox(height: 24),
           TextField(
             controller: _loginUserController,
             decoration: InputDecoration(
               labelText: 'Username',
-              labelStyle: const TextStyle(color: Color(0xFF0E7A6A), fontWeight: FontWeight.w600),
+              labelStyle: const TextStyle(
+                color: Color(0xFF0E7A6A),
+                fontWeight: FontWeight.w600,
+              ),
               filled: true,
               fillColor: const Color(0xFFF5FFFE),
               border: OutlineInputBorder(
@@ -803,8 +841,14 @@ class _AuthViewState extends State<AuthView> {
                 borderRadius: BorderRadius.circular(12),
                 borderSide: BorderSide(color: Colors.blueGrey.shade200),
               ),
-              prefixIcon: Icon(Icons.person_outline_rounded, color: Colors.blueGrey.shade500),
-              contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+              prefixIcon: Icon(
+                Icons.person_outline_rounded,
+                color: Colors.blueGrey.shade500,
+              ),
+              contentPadding: const EdgeInsets.symmetric(
+                horizontal: 16,
+                vertical: 14,
+              ),
             ),
           ),
           const SizedBox(height: 16),
@@ -813,7 +857,10 @@ class _AuthViewState extends State<AuthView> {
             obscureText: true,
             decoration: InputDecoration(
               labelText: 'Password',
-              labelStyle: const TextStyle(color: Color(0xFF0E7A6A), fontWeight: FontWeight.w600),
+              labelStyle: const TextStyle(
+                color: Color(0xFF0E7A6A),
+                fontWeight: FontWeight.w600,
+              ),
               filled: true,
               fillColor: const Color(0xFFF5FFFE),
               border: OutlineInputBorder(
@@ -824,8 +871,14 @@ class _AuthViewState extends State<AuthView> {
                 borderRadius: BorderRadius.circular(12),
                 borderSide: BorderSide(color: Colors.blueGrey.shade200),
               ),
-              prefixIcon: Icon(Icons.lock_outline_rounded, color: Colors.blueGrey.shade500),
-              contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+              prefixIcon: Icon(
+                Icons.lock_outline_rounded,
+                color: Colors.blueGrey.shade500,
+              ),
+              contentPadding: const EdgeInsets.symmetric(
+                horizontal: 16,
+                vertical: 14,
+              ),
             ),
           ),
           const SizedBox(height: 24),
@@ -836,23 +889,31 @@ class _AuthViewState extends State<AuthView> {
               onPressed: state.isLoading
                   ? null
                   : () => controller.signIn(
-                        username: _loginUserController.text.trim(),
-                        password: _loginPassController.text,
-                      ),
+                      username: _loginUserController.text.trim(),
+                      password: _loginPassController.text,
+                    ),
               style: FilledButton.styleFrom(
                 backgroundColor: const Color(0xFF0E7A6A),
                 disabledBackgroundColor: Colors.blueGrey.shade300,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
               ),
               child: state.isLoading
                   ? const SizedBox(
                       width: 20,
                       height: 20,
-                      child: CircularProgressIndicator(strokeWidth: 2, valueColor: AlwaysStoppedAnimation<Color>(Colors.white)),
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                      ),
                     )
                   : const Text(
                       'Sign In',
-                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w700,
+                      ),
                     ),
             ),
           ),
@@ -911,24 +972,39 @@ class _AuthViewState extends State<AuthView> {
               color: const Color(0xFFFFF4E6),
               borderRadius: BorderRadius.circular(12),
             ),
-            child: const Icon(Icons.app_registration_rounded, color: Color(0xFFF79B2E), size: 24),
+            child: const Icon(
+              Icons.app_registration_rounded,
+              color: Color(0xFFF79B2E),
+              size: 24,
+            ),
           ),
           const SizedBox(height: 16),
           const Text(
             'Create Account',
-            style: TextStyle(fontSize: 24, fontWeight: FontWeight.w900, color: Color(0xFF1A1A1A)),
+            style: TextStyle(
+              fontSize: 24,
+              fontWeight: FontWeight.w900,
+              color: Color(0xFF1A1A1A),
+            ),
           ),
           const SizedBox(height: 8),
           Text(
             'Join the fuel management system',
-            style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500, color: Colors.blueGrey.shade600),
+            style: TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.w500,
+              color: Colors.blueGrey.shade600,
+            ),
           ),
           const SizedBox(height: 20),
           TextField(
             controller: _regNameController,
             decoration: InputDecoration(
               labelText: 'Full Name',
-              labelStyle: const TextStyle(color: Color(0xFF0E7A6A), fontWeight: FontWeight.w600),
+              labelStyle: const TextStyle(
+                color: Color(0xFF0E7A6A),
+                fontWeight: FontWeight.w600,
+              ),
               filled: true,
               fillColor: const Color(0xFFF5FFFE),
               border: OutlineInputBorder(
@@ -939,8 +1015,14 @@ class _AuthViewState extends State<AuthView> {
                 borderRadius: BorderRadius.circular(12),
                 borderSide: BorderSide(color: Colors.blueGrey.shade200),
               ),
-              prefixIcon: Icon(Icons.badge_outlined, color: Colors.blueGrey.shade500),
-              contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+              prefixIcon: Icon(
+                Icons.badge_outlined,
+                color: Colors.blueGrey.shade500,
+              ),
+              contentPadding: const EdgeInsets.symmetric(
+                horizontal: 16,
+                vertical: 14,
+              ),
             ),
           ),
           const SizedBox(height: 12),
@@ -948,7 +1030,10 @@ class _AuthViewState extends State<AuthView> {
             controller: _regUserController,
             decoration: InputDecoration(
               labelText: 'Username',
-              labelStyle: const TextStyle(color: Color(0xFF0E7A6A), fontWeight: FontWeight.w600),
+              labelStyle: const TextStyle(
+                color: Color(0xFF0E7A6A),
+                fontWeight: FontWeight.w600,
+              ),
               filled: true,
               fillColor: const Color(0xFFF5FFFE),
               border: OutlineInputBorder(
@@ -959,8 +1044,14 @@ class _AuthViewState extends State<AuthView> {
                 borderRadius: BorderRadius.circular(12),
                 borderSide: BorderSide(color: Colors.blueGrey.shade200),
               ),
-              prefixIcon: Icon(Icons.person_outline_rounded, color: Colors.blueGrey.shade500),
-              contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+              prefixIcon: Icon(
+                Icons.person_outline_rounded,
+                color: Colors.blueGrey.shade500,
+              ),
+              contentPadding: const EdgeInsets.symmetric(
+                horizontal: 16,
+                vertical: 14,
+              ),
             ),
           ),
           const SizedBox(height: 12),
@@ -969,7 +1060,10 @@ class _AuthViewState extends State<AuthView> {
             keyboardType: TextInputType.emailAddress,
             decoration: InputDecoration(
               labelText: 'Email',
-              labelStyle: const TextStyle(color: Color(0xFF0E7A6A), fontWeight: FontWeight.w600),
+              labelStyle: const TextStyle(
+                color: Color(0xFF0E7A6A),
+                fontWeight: FontWeight.w600,
+              ),
               filled: true,
               fillColor: const Color(0xFFF5FFFE),
               border: OutlineInputBorder(
@@ -980,8 +1074,14 @@ class _AuthViewState extends State<AuthView> {
                 borderRadius: BorderRadius.circular(12),
                 borderSide: BorderSide(color: Colors.blueGrey.shade200),
               ),
-              prefixIcon: Icon(Icons.email_outlined, color: Colors.blueGrey.shade500),
-              contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+              prefixIcon: Icon(
+                Icons.email_outlined,
+                color: Colors.blueGrey.shade500,
+              ),
+              contentPadding: const EdgeInsets.symmetric(
+                horizontal: 16,
+                vertical: 14,
+              ),
             ),
           ),
           const SizedBox(height: 12),
@@ -990,7 +1090,10 @@ class _AuthViewState extends State<AuthView> {
             keyboardType: TextInputType.phone,
             decoration: InputDecoration(
               labelText: 'Phone (optional)',
-              labelStyle: const TextStyle(color: Color(0xFF0E7A6A), fontWeight: FontWeight.w600),
+              labelStyle: const TextStyle(
+                color: Color(0xFF0E7A6A),
+                fontWeight: FontWeight.w600,
+              ),
               filled: true,
               fillColor: const Color(0xFFF5FFFE),
               border: OutlineInputBorder(
@@ -1001,8 +1104,14 @@ class _AuthViewState extends State<AuthView> {
                 borderRadius: BorderRadius.circular(12),
                 borderSide: BorderSide(color: Colors.blueGrey.shade200),
               ),
-              prefixIcon: Icon(Icons.phone_outlined, color: Colors.blueGrey.shade500),
-              contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+              prefixIcon: Icon(
+                Icons.phone_outlined,
+                color: Colors.blueGrey.shade500,
+              ),
+              contentPadding: const EdgeInsets.symmetric(
+                horizontal: 16,
+                vertical: 14,
+              ),
             ),
           ),
           const SizedBox(height: 12),
@@ -1011,7 +1120,10 @@ class _AuthViewState extends State<AuthView> {
             obscureText: true,
             decoration: InputDecoration(
               labelText: 'Password',
-              labelStyle: const TextStyle(color: Color(0xFF0E7A6A), fontWeight: FontWeight.w600),
+              labelStyle: const TextStyle(
+                color: Color(0xFF0E7A6A),
+                fontWeight: FontWeight.w600,
+              ),
               filled: true,
               fillColor: const Color(0xFFF5FFFE),
               border: OutlineInputBorder(
@@ -1022,8 +1134,14 @@ class _AuthViewState extends State<AuthView> {
                 borderRadius: BorderRadius.circular(12),
                 borderSide: BorderSide(color: Colors.blueGrey.shade200),
               ),
-              prefixIcon: Icon(Icons.lock_outline_rounded, color: Colors.blueGrey.shade500),
-              contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+              prefixIcon: Icon(
+                Icons.lock_outline_rounded,
+                color: Colors.blueGrey.shade500,
+              ),
+              contentPadding: const EdgeInsets.symmetric(
+                horizontal: 16,
+                vertical: 14,
+              ),
             ),
           ),
           const SizedBox(height: 16),
@@ -1037,13 +1155,22 @@ class _AuthViewState extends State<AuthView> {
             child: DropdownButton<String>(
               value: _role,
               items: const [
-                DropdownMenuItem(value: 'owner', child: Text('🚗 Vehicle Owner')),
-                DropdownMenuItem(value: 'operator', child: Text('⛽ Pump Operator')),
+                DropdownMenuItem(
+                  value: 'owner',
+                  child: Text('🚗 Vehicle Owner'),
+                ),
+                DropdownMenuItem(
+                  value: 'operator',
+                  child: Text('⛽ Pump Operator'),
+                ),
               ],
               onChanged: (value) => setState(() => _role = value ?? 'owner'),
               underline: const SizedBox(),
               isExpanded: true,
-              style: const TextStyle(color: Color(0xFF1A1A1A), fontWeight: FontWeight.w600),
+              style: const TextStyle(
+                color: Color(0xFF1A1A1A),
+                fontWeight: FontWeight.w600,
+              ),
               dropdownColor: Colors.white,
             ),
           ),
@@ -1055,27 +1182,37 @@ class _AuthViewState extends State<AuthView> {
               onPressed: state.isLoading
                   ? null
                   : () => controller.signUpAndSignIn(
-                        username: _regUserController.text.trim(),
-                        email: _regEmailController.text.trim(),
-                        password: _regPassController.text,
-                        fullName: _regNameController.text.trim(),
-                        role: _role,
-                        phone: _regPhoneController.text.trim().isEmpty ? null : _regPhoneController.text.trim(),
-                      ),
+                      username: _regUserController.text.trim(),
+                      email: _regEmailController.text.trim(),
+                      password: _regPassController.text,
+                      fullName: _regNameController.text.trim(),
+                      role: _role,
+                      phone: _regPhoneController.text.trim().isEmpty
+                          ? null
+                          : _regPhoneController.text.trim(),
+                    ),
               style: FilledButton.styleFrom(
                 backgroundColor: const Color(0xFFF79B2E),
                 disabledBackgroundColor: Colors.amber.shade300,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
               ),
               child: state.isLoading
                   ? const SizedBox(
                       width: 20,
                       height: 20,
-                      child: CircularProgressIndicator(strokeWidth: 2, valueColor: AlwaysStoppedAnimation<Color>(Colors.white)),
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                      ),
                     )
                   : const Text(
                       'Create Account & Sign In',
-                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w700,
+                      ),
                     ),
             ),
           ),
@@ -1176,6 +1313,7 @@ class OperatorDashboard extends StatefulWidget {
 
 class _OperatorDashboardState extends State<OperatorDashboard> {
   final _imagePicker = ImagePicker();
+  final _webTestImageInput = createWebTestImageInputController();
   final _plateCtrl = TextEditingController();
   final _litersCtrl = TextEditingController(text: '20');
   final _stationCtrl = TextEditingController(text: 'Main Pump');
@@ -1183,11 +1321,27 @@ class _OperatorDashboardState extends State<OperatorDashboard> {
   EligibilityModel? _eligibility;
   bool _loading = false;
   bool _scanning = false;
+  bool _webPasteEnabled = false;
+
+  StreamSubscription<WebTestImageData>? _webPasteSubscription;
 
   bool get _busy => _loading || _scanning;
+  bool get _showWebTestingImageTools => kIsWeb && kDebugMode;
+
+  @override
+  void initState() {
+    super.initState();
+    if (_showWebTestingImageTools) {
+      _webPasteSubscription = _webTestImageInput.listenForPastedImages(
+        _handlePastedImage,
+      );
+      _webPasteEnabled = _webPasteSubscription != null;
+    }
+  }
 
   @override
   void dispose() {
+    _webPasteSubscription?.cancel();
     _plateCtrl.dispose();
     _litersCtrl.dispose();
     _stationCtrl.dispose();
@@ -1200,14 +1354,14 @@ class _OperatorDashboardState extends State<OperatorDashboard> {
       final result = await widget.api.checkEligibility(_plateCtrl.text.trim());
       setState(() => _eligibility = result);
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(result.message)),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(result.message)));
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Eligibility check failed: $e')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Eligibility check failed: $e')));
     } finally {
       if (mounted) {
         setState(() => _loading = false);
@@ -1226,14 +1380,16 @@ class _OperatorDashboardState extends State<OperatorDashboard> {
       );
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Fuel entry recorded and next schedule assigned.')),
+        const SnackBar(
+          content: Text('Fuel entry recorded and next schedule assigned.'),
+        ),
       );
       _checkEligibility();
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Record failed: $e')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Record failed: $e')));
     } finally {
       if (mounted) {
         setState(() => _loading = false);
@@ -1242,57 +1398,27 @@ class _OperatorDashboardState extends State<OperatorDashboard> {
   }
 
   Future<void> _scanPlateFromCamera() async {
-    if (kIsWeb) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Camera scan is available in the mobile app.'),
-        ),
-      );
-      return;
-    }
-
     setState(() => _scanning = true);
     try {
       final pickedImage = await _imagePicker.pickImage(
         source: ImageSource.camera,
-        imageQuality: 90,
+        imageQuality: 100,
+        maxWidth: 1920,
+        maxHeight: 1080,
       );
 
       if (pickedImage == null) {
         return;
       }
 
-      final inputImage = InputImage.fromFilePath(pickedImage.path);
-      // Use latin script with Bengali numeral conversion for compatibility
-      // Google ML Kit's latin recognizer can detect Bengali numerals when properly configured
-      final recognizer = TextRecognizer(script: TextRecognitionScript.latin);
-      final recognizedText = await recognizer.processImage(inputImage);
-      recognizer.close();
-
-      final plateText = _extractPlateText(recognizedText.text);
-      if (plateText.isEmpty) {
-        if (!mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('No readable plate text found.')),
-        );
-        return;
-      }
-
-      setState(() {
-        _plateCtrl.text = plateText;
-        _eligibility = null;
-      });
-
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Plate scanned: $plateText')),
+      await _processScannedImage(
+        await pickedImage.readAsBytes(),
+        sourceLabel: 'camera image',
       );
-      await _checkEligibility();
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Scan failed: $e')),
+        SnackBar(content: Text('Scan failed: $e - Please enter manually')),
       );
     } finally {
       if (mounted) {
@@ -1301,13 +1427,159 @@ class _OperatorDashboardState extends State<OperatorDashboard> {
     }
   }
 
+  Future<void> _scanPlateFromUpload() async {
+    setState(() => _scanning = true);
+    try {
+      final image = await _webTestImageInput.pickImage();
+      if (image == null) {
+        return;
+      }
+
+      await _processScannedImage(image.bytes, sourceLabel: image.sourceLabel);
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Upload scan failed: $e - Please enter manually'),
+        ),
+      );
+    } finally {
+      if (mounted) {
+        setState(() => _scanning = false);
+      }
+    }
+  }
+
+  Future<void> _handlePastedImage(WebTestImageData image) async {
+    if (_busy) {
+      return;
+    }
+
+    setState(() => _scanning = true);
+    try {
+      await _processScannedImage(
+        image.bytes,
+        sourceLabel: image.sourceLabel,
+        announcePasteHint: false,
+      );
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Paste scan failed: $e - Please enter manually'),
+        ),
+      );
+    } finally {
+      if (mounted) {
+        setState(() => _scanning = false);
+      }
+    }
+  }
+
+  Future<void> _processScannedImage(
+    Uint8List imageBytes, {
+    required String sourceLabel,
+    bool announcePasteHint = true,
+  }) async {
+    final recognizedText = await _recognizeTextFromImageBytes(imageBytes);
+    final plateText = _extractPlateText(recognizedText);
+
+    if (!mounted) return;
+
+    if (plateText.isNotEmpty) {
+      final previewText = recognizedText.replaceAll('\n', ' ');
+      final preview = previewText.substring(
+        0,
+        previewText.length > 50 ? 50 : previewText.length,
+      );
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'Detected from $sourceLabel: $plateText\nRaw: $preview...',
+          ),
+          duration: const Duration(seconds: 3),
+        ),
+      );
+    }
+
+    if (plateText.isEmpty) {
+      final previewText = recognizedText.replaceAll('\n', ' ');
+      final preview = previewText.substring(
+        0,
+        previewText.length > 100 ? 100 : previewText.length,
+      );
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'No plate number found in $sourceLabel. Raw text: $preview',
+          ),
+          duration: const Duration(seconds: 4),
+        ),
+      );
+      return;
+    }
+
+    setState(() {
+      _plateCtrl.text = plateText;
+      _eligibility = null;
+    });
+
+    final suffix = announcePasteHint && _showWebTestingImageTools
+        ? ' You can also paste a copied image with Ctrl+V.'
+        : '';
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          'Plate scanned: $plateText - Please verify and edit if needed.$suffix',
+        ),
+      ),
+    );
+  }
+
+  Future<String> _recognizeTextFromImageBytes(Uint8List imageBytes) async {
+    final codec = await ui.instantiateImageCodec(imageBytes);
+    final frame = await codec.getNextFrame();
+    final image = frame.image;
+    final width = image.width;
+    final height = image.height;
+    final byteData = await image.toByteData(format: ui.ImageByteFormat.rawRgba);
+    image.dispose();
+    codec.dispose();
+
+    if (byteData == null) {
+      throw Exception('Could not decode the selected image.');
+    }
+
+    final inputImage = InputImage.fromBitmap(
+      bitmap: byteData.buffer.asUint8List(),
+      width: width,
+      height: height,
+    );
+
+    final recognizer = TextRecognizer(script: TextRecognitionScript.latin);
+    try {
+      final recognized = await recognizer.processImage(inputImage);
+      return recognized.text;
+    } finally {
+      recognizer.close();
+    }
+  }
+
   /// Convert Bengali numerals to English numerals
   String _convertBengaliToEnglish(String text) {
     const bengaliToEnglish = {
-      '০': '0', '১': '1', '২': '2', '৩': '3', '৪': '4',
-      '৫': '5', '৬': '6', '৭': '7', '৮': '8', '৯': '9',
+      '০': '0',
+      '১': '1',
+      '২': '2',
+      '৩': '3',
+      '৪': '4',
+      '৫': '5',
+      '৬': '6',
+      '৭': '7',
+      '৮': '8',
+      '৯': '9',
     };
-    
+
     String result = text;
     bengaliToEnglish.forEach((bengali, english) {
       result = result.replaceAll(bengali, english);
@@ -1319,35 +1591,64 @@ class _OperatorDashboardState extends State<OperatorDashboard> {
   /// Looks for pattern: XX-XXXX or XX-XXX (digits-digits)
   /// Converts Bengali numerals to English and filters out city/metro text
   String _extractPlateText(String rawText) {
+    if (rawText.isEmpty) return '';
+
     // Convert Bengali numerals to English
     final converted = _convertBengaliToEnglish(rawText);
-    
+
     // Split into lines to process separately
     final lines = converted.split('\n');
-    
+
     // Look for line matching plate number pattern: 2-3 digits, hyphen, 3-4 digits
-    final platePattern = RegExp(r'\b(\d{2,3}[-]\d{3,4})\b');
-    
+    final strictPattern = RegExp(r'\b(\d{2,3}[-]\d{3,4})\b');
+
     for (final line in lines) {
-      final match = platePattern.firstMatch(line);
+      final match = strictPattern.firstMatch(line);
       if (match != null) {
-        // Return the matched plate number
         return match.group(1)!.trim().toUpperCase();
       }
     }
-    
-    // Fallback: if no pattern match, try to find any line with digits and hyphen
+
+    // Fallback 1: Look for any sequence with digits and hyphen (more lenient)
+    final lenientPattern = RegExp(r'(\d+[-]\d+)');
+    for (final line in lines) {
+      final match = lenientPattern.firstMatch(line);
+      if (match != null) {
+        final candidate = match.group(1)!;
+        // Validate it's reasonable length (at least 4 chars: XX-X)
+        if (candidate.length >= 4) {
+          return candidate.trim().toUpperCase();
+        }
+      }
+    }
+
+    // Fallback 2: Try to extract just digits and hyphens from any line with both
     for (final line in lines) {
       if (line.contains('-') && RegExp(r'\d').hasMatch(line)) {
-        // Extract just the digits and hyphen
         final digitsAndHyphen = line.replaceAll(RegExp(r'[^\d-]'), '');
-        if (digitsAndHyphen.isNotEmpty && digitsAndHyphen.contains('-')) {
+        if (digitsAndHyphen.isNotEmpty &&
+            digitsAndHyphen.contains('-') &&
+            digitsAndHyphen.length >= 4) {
           return digitsAndHyphen.trim().toUpperCase();
         }
       }
     }
-    
-    // Last resort: return cleaned text with Bengali converted
+
+    // Fallback 3: Look for any numeric sequence (digits only, no hyphen required)
+    final digitsOnly = RegExp(r'\d{4,}');
+    for (final line in lines) {
+      final match = digitsOnly.firstMatch(line);
+      if (match != null) {
+        final digits = match.group(0)!;
+        // Try to format as XX-XXX or XX-XXXX if we have enough digits
+        if (digits.length >= 5) {
+          return '${digits.substring(0, 2)}-${digits.substring(2)}'
+              .toUpperCase();
+        }
+      }
+    }
+
+    // Last resort: return cleaned text with Bengali converted (for manual correction)
     return converted.replaceAll(RegExp(r'\s+'), ' ').trim().toUpperCase();
   }
 
@@ -1386,7 +1687,11 @@ class _OperatorDashboardState extends State<OperatorDashboard> {
                     color: Colors.white.withOpacity(0.16),
                     borderRadius: BorderRadius.circular(16),
                   ),
-                  child: const Icon(Icons.document_scanner_rounded, color: Colors.white, size: 30),
+                  child: const Icon(
+                    Icons.document_scanner_rounded,
+                    color: Colors.white,
+                    size: 30,
+                  ),
                 ),
                 const SizedBox(width: 14),
                 Expanded(
@@ -1432,11 +1737,20 @@ class _OperatorDashboardState extends State<OperatorDashboard> {
                           color: const Color(0xFFE7F4F1),
                           borderRadius: BorderRadius.circular(12),
                         ),
-                        child: const Icon(Icons.qr_code_scanner_rounded, color: Color(0xFF0E7A6A)),
+                        child: const Icon(
+                          Icons.qr_code_scanner_rounded,
+                          color: Color(0xFF0E7A6A),
+                        ),
                       ),
                       const SizedBox(width: 12),
                       const Expanded(
-                        child: Text('Operator Console', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 24)),
+                        child: Text(
+                          'Operator Console',
+                          style: TextStyle(
+                            fontWeight: FontWeight.w800,
+                            fontSize: 24,
+                          ),
+                        ),
                       ),
                     ],
                   ),
@@ -1469,6 +1783,12 @@ class _OperatorDashboardState extends State<OperatorDashboard> {
                         icon: const Icon(Icons.document_scanner_rounded),
                         label: const Text('Scan Plate'),
                       ),
+                      if (_showWebTestingImageTools)
+                        FilledButton.tonalIcon(
+                          onPressed: _busy ? null : _scanPlateFromUpload,
+                          icon: const Icon(Icons.upload_file_rounded),
+                          label: const Text('Upload Test Image'),
+                        ),
                       FilledButton.icon(
                         onPressed: _loading ? null : _checkEligibility,
                         icon: const Icon(Icons.verified_rounded),
@@ -1476,6 +1796,24 @@ class _OperatorDashboardState extends State<OperatorDashboard> {
                       ),
                     ],
                   ),
+                  if (_showWebTestingImageTools) ...[
+                    const SizedBox(height: 10),
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFF3F8F7),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: const Color(0xFFD5E6E2)),
+                      ),
+                      child: Text(
+                        _webPasteEnabled
+                            ? 'Web testing tools are enabled. Upload an image or copy one and press Ctrl+V to OCR it.'
+                            : 'Web testing upload is enabled in debug mode.',
+                        style: TextStyle(color: Colors.blueGrey.shade700),
+                      ),
+                    ),
+                  ],
                   const SizedBox(height: 12),
                   Row(
                     children: [
@@ -1494,12 +1832,24 @@ class _OperatorDashboardState extends State<OperatorDashboard> {
                         child: DropdownButtonFormField<String>(
                           initialValue: _fuelType,
                           items: const [
-                            DropdownMenuItem(value: 'Petrol', child: Text('Petrol')),
-                            DropdownMenuItem(value: 'Diesel', child: Text('Diesel')),
-                            DropdownMenuItem(value: 'Octane', child: Text('Octane')),
+                            DropdownMenuItem(
+                              value: 'Petrol',
+                              child: Text('Petrol'),
+                            ),
+                            DropdownMenuItem(
+                              value: 'Diesel',
+                              child: Text('Diesel'),
+                            ),
+                            DropdownMenuItem(
+                              value: 'Octane',
+                              child: Text('Octane'),
+                            ),
                           ],
-                          onChanged: (value) => setState(() => _fuelType = value ?? 'Petrol'),
-                          decoration: const InputDecoration(labelText: 'Fuel Type'),
+                          onChanged: (value) =>
+                              setState(() => _fuelType = value ?? 'Petrol'),
+                          decoration: const InputDecoration(
+                            labelText: 'Fuel Type',
+                          ),
                         ),
                       ),
                     ],
@@ -1507,7 +1857,9 @@ class _OperatorDashboardState extends State<OperatorDashboard> {
                   const SizedBox(height: 10),
                   TextField(
                     controller: _stationCtrl,
-                    decoration: const InputDecoration(labelText: 'Station Name'),
+                    decoration: const InputDecoration(
+                      labelText: 'Station Name',
+                    ),
                   ),
                   const SizedBox(height: 14),
                   Wrap(
@@ -1535,7 +1887,9 @@ class _OperatorDashboardState extends State<OperatorDashboard> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            _eligibility!.isEligible ? 'Eligible' : 'Not Eligible',
+                            _eligibility!.isEligible
+                                ? 'Eligible'
+                                : 'Not Eligible',
                             style: TextStyle(
                               fontWeight: FontWeight.w700,
                               color: _eligibility!.isEligible
@@ -1546,8 +1900,11 @@ class _OperatorDashboardState extends State<OperatorDashboard> {
                           const SizedBox(height: 4),
                           Text(_eligibility!.message),
                           if (_eligibility!.hoursRemaining != null)
-                            Text('Hours Remaining: ${_eligibility!.hoursRemaining}'),
-                          if (_eligibility!.nextSlotStart != null && _eligibility!.nextSlotEnd != null)
+                            Text(
+                              'Hours Remaining: ${_eligibility!.hoursRemaining}',
+                            ),
+                          if (_eligibility!.nextSlotStart != null &&
+                              _eligibility!.nextSlotEnd != null)
                             Text(
                               'Next Slot: ${formatter.format(_eligibility!.nextSlotStart!.toLocal())} - ${formatter.format(_eligibility!.nextSlotEnd!.toLocal())}',
                             ),
@@ -1621,9 +1978,9 @@ class _OwnerDashboardState extends State<OwnerDashboard> {
       _reloadVehicles();
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Add vehicle failed: $e')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Add vehicle failed: $e')));
     }
   }
 
@@ -1633,9 +1990,9 @@ class _OwnerDashboardState extends State<OwnerDashboard> {
       setState(() => _status = result);
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Status check failed: $e')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Status check failed: $e')));
     }
   }
 
@@ -1674,7 +2031,11 @@ class _OwnerDashboardState extends State<OwnerDashboard> {
                     color: Colors.white.withOpacity(0.16),
                     borderRadius: BorderRadius.circular(16),
                   ),
-                  child: const Icon(Icons.document_scanner_rounded, color: Colors.white, size: 30),
+                  child: const Icon(
+                    Icons.document_scanner_rounded,
+                    color: Colors.white,
+                    size: 30,
+                  ),
                 ),
                 const SizedBox(width: 14),
                 Expanded(
@@ -1720,13 +2081,19 @@ class _OwnerDashboardState extends State<OwnerDashboard> {
                           color: const Color(0xFFE7F4F1),
                           borderRadius: BorderRadius.circular(12),
                         ),
-                        child: const Icon(Icons.qr_code_scanner_rounded, color: Color(0xFF0E7A6A)),
+                        child: const Icon(
+                          Icons.qr_code_scanner_rounded,
+                          color: Color(0xFF0E7A6A),
+                        ),
                       ),
                       const SizedBox(width: 12),
                       const Expanded(
                         child: Text(
                           'Vehicle Owner Console',
-                          style: TextStyle(fontSize: 24, fontWeight: FontWeight.w800),
+                          style: TextStyle(
+                            fontSize: 24,
+                            fontWeight: FontWeight.w800,
+                          ),
                         ),
                       ),
                     ],
@@ -1748,7 +2115,9 @@ class _OwnerDashboardState extends State<OwnerDashboard> {
                           if (mounted) {
                             ScaffoldMessenger.of(context).showSnackBar(
                               const SnackBar(
-                                content: Text('Use the scanner button in the operator console for camera OCR.'),
+                                content: Text(
+                                  'Use the scanner button in the operator console for camera OCR.',
+                                ),
                               ),
                             );
                           }
@@ -1763,7 +2132,9 @@ class _OwnerDashboardState extends State<OwnerDashboard> {
                       Expanded(
                         child: TextField(
                           controller: _typeCtrl,
-                          decoration: const InputDecoration(labelText: 'Vehicle Type'),
+                          decoration: const InputDecoration(
+                            labelText: 'Vehicle Type',
+                          ),
                         ),
                       ),
                       const SizedBox(width: 10),
@@ -1818,7 +2189,9 @@ class _OwnerDashboardState extends State<OwnerDashboard> {
                       width: double.infinity,
                       padding: const EdgeInsets.all(12),
                       decoration: BoxDecoration(
-                        color: _status!.isEligible ? const Color(0xFFE8FAF5) : const Color(0xFFFFF3E9),
+                        color: _status!.isEligible
+                            ? const Color(0xFFE8FAF5)
+                            : const Color(0xFFFFF3E9),
                         borderRadius: BorderRadius.circular(12),
                       ),
                       child: Column(
@@ -1826,8 +2199,11 @@ class _OwnerDashboardState extends State<OwnerDashboard> {
                         children: [
                           Text(_status!.message),
                           if (_status!.hoursRemaining != null)
-                            Text('Countdown: ${_status!.hoursRemaining} hours left'),
-                          if (_status!.nextSlotStart != null && _status!.nextSlotEnd != null)
+                            Text(
+                              'Countdown: ${_status!.hoursRemaining} hours left',
+                            ),
+                          if (_status!.nextSlotStart != null &&
+                              _status!.nextSlotEnd != null)
                             Text(
                               'Next Slot: ${formatter.format(_status!.nextSlotStart!.toLocal())} - ${formatter.format(_status!.nextSlotEnd!.toLocal())}',
                             ),
@@ -1836,7 +2212,10 @@ class _OwnerDashboardState extends State<OwnerDashboard> {
                     ),
                   ],
                   const SizedBox(height: 18),
-                  const Text('My Vehicles', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700)),
+                  const Text(
+                    'My Vehicles',
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
+                  ),
                   const SizedBox(height: 8),
                   FutureBuilder<List<VehicleModel>>(
                     future: _vehiclesFuture,
@@ -1848,11 +2227,15 @@ class _OwnerDashboardState extends State<OwnerDashboard> {
                         );
                       }
                       if (snapshot.hasError) {
-                        return Text('Failed to load vehicles: ${snapshot.error}');
+                        return Text(
+                          'Failed to load vehicles: ${snapshot.error}',
+                        );
                       }
                       final vehicles = snapshot.data ?? [];
                       if (vehicles.isEmpty) {
-                        return const Text('No vehicles yet. Add your first one above.');
+                        return const Text(
+                          'No vehicles yet. Add your first one above.',
+                        );
                       }
                       return Column(
                         children: vehicles
@@ -1860,14 +2243,22 @@ class _OwnerDashboardState extends State<OwnerDashboard> {
                               (vehicle) => Card(
                                 margin: const EdgeInsets.only(bottom: 8),
                                 child: ListTile(
-                                  leading: const CircleAvatar(child: Icon(Icons.directions_car_filled_rounded)),
+                                  leading: const CircleAvatar(
+                                    child: Icon(
+                                      Icons.directions_car_filled_rounded,
+                                    ),
+                                  ),
                                   title: Text(vehicle.plateNumber),
                                   subtitle: Text(
-                                    '${vehicle.vehicleType ?? 'Vehicle'} • ${vehicle.make ?? ''} ${vehicle.model ?? ''}'.trim(),
+                                    '${vehicle.vehicleType ?? 'Vehicle'} • ${vehicle.make ?? ''} ${vehicle.model ?? ''}'
+                                        .trim(),
                                   ),
                                   trailing: IconButton(
-                                    icon: const Icon(Icons.chevron_right_rounded),
-                                    onPressed: () => _checkStatus(vehicle.plateNumber),
+                                    icon: const Icon(
+                                      Icons.chevron_right_rounded,
+                                    ),
+                                    onPressed: () =>
+                                        _checkStatus(vehicle.plateNumber),
                                   ),
                                 ),
                               ),
@@ -1935,11 +2326,31 @@ class _AdminDashboardState extends State<AdminDashboard> {
               final summary = snapshot.data!;
               return _KpiStrip(
                 items: [
-                  _KpiData(title: 'Vehicles', value: '${summary.totalVehicles}', icon: Icons.directions_car_filled_rounded),
-                  _KpiData(title: 'Users', value: '${summary.totalUsers}', icon: Icons.group_rounded),
-                  _KpiData(title: 'Today Fuel', value: '${summary.todayFuelEntries}', icon: Icons.local_gas_station_rounded),
-                  _KpiData(title: 'Eligible', value: '${summary.eligibleVehicles}', icon: Icons.verified_rounded),
-                  _KpiData(title: 'Denied', value: '${summary.deniedVehicles}', icon: Icons.gpp_bad_rounded),
+                  _KpiData(
+                    title: 'Vehicles',
+                    value: '${summary.totalVehicles}',
+                    icon: Icons.directions_car_filled_rounded,
+                  ),
+                  _KpiData(
+                    title: 'Users',
+                    value: '${summary.totalUsers}',
+                    icon: Icons.group_rounded,
+                  ),
+                  _KpiData(
+                    title: 'Today Fuel',
+                    value: '${summary.todayFuelEntries}',
+                    icon: Icons.local_gas_station_rounded,
+                  ),
+                  _KpiData(
+                    title: 'Eligible',
+                    value: '${summary.eligibleVehicles}',
+                    icon: Icons.verified_rounded,
+                  ),
+                  _KpiData(
+                    title: 'Denied',
+                    value: '${summary.deniedVehicles}',
+                    icon: Icons.gpp_bad_rounded,
+                  ),
                 ],
               );
             },
@@ -1956,7 +2367,10 @@ class _AdminDashboardState extends State<AdminDashboard> {
                       const Expanded(
                         child: Text(
                           'Admin Monitoring',
-                          style: TextStyle(fontSize: 24, fontWeight: FontWeight.w800),
+                          style: TextStyle(
+                            fontSize: 24,
+                            fontWeight: FontWeight.w800,
+                          ),
                         ),
                       ),
                       IconButton(
@@ -1979,7 +2393,9 @@ class _AdminDashboardState extends State<AdminDashboard> {
                         return const Center(child: CircularProgressIndicator());
                       }
                       if (snapshot.hasError) {
-                        return Text('Failed to load entries: ${snapshot.error}');
+                        return Text(
+                          'Failed to load entries: ${snapshot.error}',
+                        );
                       }
                       final entries = snapshot.data ?? [];
                       if (entries.isEmpty) {
@@ -1993,11 +2409,17 @@ class _AdminDashboardState extends State<AdminDashboard> {
                               backgroundColor: const Color(0xFFE7F4F1),
                               child: Text('${entry.vehicleId}'),
                             ),
-                            title: Text('Vehicle ID ${entry.vehicleId} • ${entry.amountLiters}L ${entry.fuelType}'),
-                            subtitle: Text('Entry ${formatter.format(entry.entryDateTime.toLocal())}'),
+                            title: Text(
+                              'Vehicle ID ${entry.vehicleId} • ${entry.amountLiters}L ${entry.fuelType}',
+                            ),
+                            subtitle: Text(
+                              'Entry ${formatter.format(entry.entryDateTime.toLocal())}',
+                            ),
                             trailing: Text(
                               formatter.format(entry.nextSlotStart.toLocal()),
-                              style: const TextStyle(fontWeight: FontWeight.w600),
+                              style: const TextStyle(
+                                fontWeight: FontWeight.w600,
+                              ),
                             ),
                           );
                         }).toList(),
@@ -2019,7 +2441,11 @@ class _KpiData {
   final String value;
   final IconData icon;
 
-  const _KpiData({required this.title, required this.value, required this.icon});
+  const _KpiData({
+    required this.title,
+    required this.value,
+    required this.icon,
+  });
 }
 
 class _KpiStrip extends StatelessWidget {
@@ -2032,7 +2458,9 @@ class _KpiStrip extends StatelessWidget {
     return LayoutBuilder(
       builder: (context, constraints) {
         final width = constraints.maxWidth;
-        final cardWidth = width > 860 ? (width - ((items.length - 1) * 10)) / items.length : (width - 10) / 2;
+        final cardWidth = width > 860
+            ? (width - ((items.length - 1) * 10)) / items.length
+            : (width - 10) / 2;
 
         return Wrap(
           spacing: 10,
@@ -2066,7 +2494,10 @@ class _KpiStrip extends StatelessWidget {
                           children: [
                             Text(
                               item.value,
-                              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w800),
+                              style: const TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.w800,
+                              ),
                             ),
                             Text(
                               item.title,
@@ -2085,4 +2516,3 @@ class _KpiStrip extends StatelessWidget {
     );
   }
 }
-

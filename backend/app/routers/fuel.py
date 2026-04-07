@@ -88,7 +88,10 @@ def scan_and_record_fuel(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_active_user)
 ):
-    """Scan plate and create fuel entry in a single request (Operator only)"""
+    """Scan plate and create fuel entry in a single request (Operator only)
+    
+    Automatically creates vehicle record if not found (as unknown vehicle).
+    """
     if current_user.role != UserRole.OPERATOR:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
@@ -98,13 +101,23 @@ def scan_and_record_fuel(
     normalized_plate = payload.plate_number.strip().upper()
     vehicle = db.query(Vehicle).filter(
         Vehicle.plate_number == normalized_plate,
-        Vehicle.is_active == True,
+        Vehicle.is_active.is_(True),  # Use is_() for boolean comparison
     ).first()
+    
+    # Auto-create vehicle if not found (as unknown/unregistered vehicle)
     if not vehicle:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Vehicle not found: {normalized_plate}"
+        vehicle = Vehicle(
+            plate_number=normalized_plate,
+            owner_id=None,  # No registered app user
+            owner_name=None,  # Unknown owner
+            owner_phone=None,  # Unknown phone
+            is_registered_owner=False,  # Mark as unregistered
+            vehicle_type="Unknown",  # Default type
+            is_active=True
         )
+        db.add(vehicle)
+        db.commit()
+        db.refresh(vehicle)
 
     eligibility = EligibilityService.check_eligibility(db, normalized_plate)
     if not eligibility.is_eligible:
@@ -206,7 +219,7 @@ def dashboard_summary(
         FuelEntry.entry_datetime >= today_start
     ).scalar() or 0
 
-    vehicles = db.query(Vehicle).filter(Vehicle.is_active == True).all()
+    vehicles = db.query(Vehicle).filter(Vehicle.is_active.is_(True)).all()
     eligible_count = 0
     denied_count = 0
     for vehicle in vehicles:
