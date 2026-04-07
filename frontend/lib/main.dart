@@ -1,4 +1,3 @@
-import 'dart:async';
 import 'dart:convert';
 import 'dart:typed_data';
 import 'dart:ui' as ui;
@@ -11,10 +10,6 @@ import 'package:http/http.dart' as http;
 import 'package:intl/intl.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-
-import 'web_test_image_input_stub.dart'
-    if (dart.library.html) 'web_test_image_input_web.dart';
-import 'web_test_image_input_types.dart';
 
 void main() {
   runApp(const VerifyFuelApp());
@@ -1313,7 +1308,6 @@ class OperatorDashboard extends StatefulWidget {
 
 class _OperatorDashboardState extends State<OperatorDashboard> {
   final _imagePicker = ImagePicker();
-  final _webTestImageInput = createWebTestImageInputController();
   final _plateCtrl = TextEditingController();
   final _litersCtrl = TextEditingController(text: '20');
   final _stationCtrl = TextEditingController(text: 'Main Pump');
@@ -1321,27 +1315,11 @@ class _OperatorDashboardState extends State<OperatorDashboard> {
   EligibilityModel? _eligibility;
   bool _loading = false;
   bool _scanning = false;
-  bool _webPasteEnabled = false;
-
-  StreamSubscription<WebTestImageData>? _webPasteSubscription;
 
   bool get _busy => _loading || _scanning;
-  bool get _showWebTestingImageTools => kIsWeb && kDebugMode;
-
-  @override
-  void initState() {
-    super.initState();
-    if (_showWebTestingImageTools) {
-      _webPasteSubscription = _webTestImageInput.listenForPastedImages(
-        _handlePastedImage,
-      );
-      _webPasteEnabled = _webPasteSubscription != null;
-    }
-  }
 
   @override
   void dispose() {
-    _webPasteSubscription?.cancel();
     _plateCtrl.dispose();
     _litersCtrl.dispose();
     _stationCtrl.dispose();
@@ -1427,59 +1405,9 @@ class _OperatorDashboardState extends State<OperatorDashboard> {
     }
   }
 
-  Future<void> _scanPlateFromUpload() async {
-    setState(() => _scanning = true);
-    try {
-      final image = await _webTestImageInput.pickImage();
-      if (image == null) {
-        return;
-      }
-
-      await _processScannedImage(image.bytes, sourceLabel: image.sourceLabel);
-    } catch (e) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Upload scan failed: $e - Please enter manually'),
-        ),
-      );
-    } finally {
-      if (mounted) {
-        setState(() => _scanning = false);
-      }
-    }
-  }
-
-  Future<void> _handlePastedImage(WebTestImageData image) async {
-    if (_busy) {
-      return;
-    }
-
-    setState(() => _scanning = true);
-    try {
-      await _processScannedImage(
-        image.bytes,
-        sourceLabel: image.sourceLabel,
-        announcePasteHint: false,
-      );
-    } catch (e) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Paste scan failed: $e - Please enter manually'),
-        ),
-      );
-    } finally {
-      if (mounted) {
-        setState(() => _scanning = false);
-      }
-    }
-  }
-
   Future<void> _processScannedImage(
     Uint8List imageBytes, {
     required String sourceLabel,
-    bool announcePasteHint = true,
   }) async {
     final recognizedText = await _recognizeTextFromImageBytes(imageBytes);
     final plateText = _extractPlateText(recognizedText);
@@ -1524,13 +1452,10 @@ class _OperatorDashboardState extends State<OperatorDashboard> {
       _eligibility = null;
     });
 
-    final suffix = announcePasteHint && _showWebTestingImageTools
-        ? ' You can also paste a copied image with Ctrl+V.'
-        : '';
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(
-          'Plate scanned: $plateText - Please verify and edit if needed.$suffix',
+          'Plate scanned: $plateText - Please verify and edit if needed',
         ),
       ),
     );
@@ -1783,12 +1708,6 @@ class _OperatorDashboardState extends State<OperatorDashboard> {
                         icon: const Icon(Icons.document_scanner_rounded),
                         label: const Text('Scan Plate'),
                       ),
-                      if (_showWebTestingImageTools)
-                        FilledButton.tonalIcon(
-                          onPressed: _busy ? null : _scanPlateFromUpload,
-                          icon: const Icon(Icons.upload_file_rounded),
-                          label: const Text('Upload Test Image'),
-                        ),
                       FilledButton.icon(
                         onPressed: _loading ? null : _checkEligibility,
                         icon: const Icon(Icons.verified_rounded),
@@ -1796,24 +1715,6 @@ class _OperatorDashboardState extends State<OperatorDashboard> {
                       ),
                     ],
                   ),
-                  if (_showWebTestingImageTools) ...[
-                    const SizedBox(height: 10),
-                    Container(
-                      width: double.infinity,
-                      padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFFF3F8F7),
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(color: const Color(0xFFD5E6E2)),
-                      ),
-                      child: Text(
-                        _webPasteEnabled
-                            ? 'Web testing tools are enabled. Upload an image or copy one and press Ctrl+V to OCR it.'
-                            : 'Web testing upload is enabled in debug mode.',
-                        style: TextStyle(color: Colors.blueGrey.shade700),
-                      ),
-                    ),
-                  ],
                   const SizedBox(height: 12),
                   Row(
                     children: [
