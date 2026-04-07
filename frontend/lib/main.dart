@@ -13,7 +13,20 @@ void main() {
   runApp(const VerifyFuelApp());
 }
 
-const String apiBaseUrl = 'http://127.0.0.1:8000';
+const String _apiBaseUrlFromEnvironment = String.fromEnvironment('API_BASE_URL');
+
+String get apiBaseUrl {
+  if (_apiBaseUrlFromEnvironment.isNotEmpty) {
+    return _apiBaseUrlFromEnvironment;
+  }
+
+  if (kIsWeb) {
+    return 'http://127.0.0.1:8000';
+  }
+
+  // Android emulators reach the host machine via 10.0.2.2 instead of localhost.
+  return 'http://10.0.2.2:8000';
+}
 
 class UserProfile {
   final int id;
