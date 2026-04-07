@@ -108,6 +108,17 @@ class ScanFuelRequest(BaseModel):
     notes: Optional[str] = None
 
 
+class PlateOcrRequest(BaseModel):
+    image_base64: str
+
+
+class PlateOcrResponse(BaseModel):
+    plate_number: str
+    raw_text: str
+    provider: str
+    is_configured: bool = True
+
+
 class DashboardSummary(BaseModel):
     total_vehicles: int
     total_users: int

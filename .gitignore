@@ -31,6 +31,9 @@ env/
 # Environment variables
 .env
 .env.local
+backend/.secrets/
+backend/*service-account*.json
+backend/*credentials*.json
 
 # IDEs
 .vscode/

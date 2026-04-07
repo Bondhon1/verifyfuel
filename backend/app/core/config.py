@@ -19,6 +19,9 @@ if BaseSettings is not None and ConfigDict is not None:
         SECRET_KEY: str
         ALGORITHM: str = "HS256"
         ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
+        GOOGLE_VISION_API_KEY: str = ""
+        GOOGLE_APPLICATION_CREDENTIALS: str = ""
+        GOOGLE_APPLICATION_CREDENTIALS_JSON: str = ""
 
         model_config = ConfigDict(
             env_file=".env",
@@ -34,6 +37,13 @@ else:
             self.ALGORITHM = os.getenv("ALGORITHM", "HS256")
             self.ACCESS_TOKEN_EXPIRE_MINUTES = int(
                 os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", "30")
+            )
+            self.GOOGLE_VISION_API_KEY = os.getenv("GOOGLE_VISION_API_KEY", "")
+            self.GOOGLE_APPLICATION_CREDENTIALS = os.getenv(
+                "GOOGLE_APPLICATION_CREDENTIALS", ""
+            )
+            self.GOOGLE_APPLICATION_CREDENTIALS_JSON = os.getenv(
+                "GOOGLE_APPLICATION_CREDENTIALS_JSON", ""
             )
 
         def _require(self, name: str) -> str:

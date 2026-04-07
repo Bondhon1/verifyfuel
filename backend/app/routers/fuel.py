@@ -12,11 +12,48 @@ from app.schemas.schemas import (
     EligibilityResponse,
     ScanFuelRequest,
     DashboardSummary,
+    PlateOcrRequest,
+    PlateOcrResponse,
 )
 from app.services.eligibility_service import EligibilityService
+from app.services.ocr_service import GoogleVisionOcrService
 from app.services.scheduling_service import SchedulingService
 
 router = APIRouter(prefix="/fuel", tags=["Fuel Management"])
+
+
+@router.post("/ocr/scan-plate", response_model=PlateOcrResponse)
+def scan_plate_with_google_vision(
+    payload: PlateOcrRequest,
+    current_user: User = Depends(get_current_active_user),
+):
+    """Run OCR with Google Vision and extract only vehicle plate pattern text."""
+    if current_user.role not in [UserRole.ADMIN, UserRole.OPERATOR]:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Only admins and operators can use plate OCR",
+        )
+
+    if not GoogleVisionOcrService.is_configured():
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Google Vision OCR is not configured on server",
+        )
+
+    try:
+        result = GoogleVisionOcrService.scan_plate(payload.image_base64)
+    except ValueError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(exc),
+        ) from exc
+    except RuntimeError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_502_BAD_GATEWAY,
+            detail=str(exc),
+        ) from exc
+
+    return PlateOcrResponse(**result)
 
 @router.get("/check-eligibility/{plate_number}", response_model=EligibilityResponse)
 def check_eligibility(

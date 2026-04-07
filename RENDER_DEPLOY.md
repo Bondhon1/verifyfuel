@@ -18,7 +18,21 @@ This repository is a monorepo, and Render can deploy only the backend by using t
    - `SECRET_KEY`
    - `ALGORITHM=HS256`
    - `ACCESS_TOKEN_EXPIRE_MINUTES=30`
+   - One OCR auth option:
+     - `GOOGLE_APPLICATION_CREDENTIALS_JSON` (full service-account JSON as single line, recommended on Render)
+     - or `GOOGLE_VISION_API_KEY` (fallback option)
 6. Deploy the service.
+
+### Render + Google Vision service account setup
+
+1. Open your service in Render and go to **Environment**.
+2. Add `GOOGLE_APPLICATION_CREDENTIALS_JSON`.
+3. Paste your entire service-account JSON into that value.
+4. Click **Save Changes** and redeploy.
+5. Verify OCR endpoint works from your app scan flow.
+
+Security note:
+- If your private key was shared publicly, rotate/delete that key in Google Cloud IAM and use a newly generated key.
 
 After deployment, Render will give you a public URL similar to:
 

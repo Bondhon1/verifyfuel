@@ -184,6 +184,26 @@ class FuelEntryModel {
   }
 }
 
+class OcrScanResult {
+  final String plateNumber;
+  final String rawText;
+  final String provider;
+
+  const OcrScanResult({
+    required this.plateNumber,
+    required this.rawText,
+    required this.provider,
+  });
+
+  factory OcrScanResult.fromJson(Map<String, dynamic> json) {
+    return OcrScanResult(
+      plateNumber: (json['plate_number'] as String?) ?? '',
+      rawText: (json['raw_text'] as String?) ?? '',
+      provider: (json['provider'] as String?) ?? 'unknown',
+    );
+  }
+}
+
 class ApiClient {
   final String? token;
 
@@ -339,6 +359,20 @@ class ApiClient {
     if (response.statusCode != 200) {
       _throwApiError(response);
     }
+  }
+
+  Future<OcrScanResult> scanPlateWithCloudOcr(Uint8List imageBytes) async {
+    final response = await http.post(
+      Uri.parse('$apiBaseUrl/fuel/ocr/scan-plate'),
+      headers: _jsonHeaders(),
+      body: jsonEncode({'image_base64': base64Encode(imageBytes)}),
+    );
+    if (response.statusCode != 200) {
+      _throwApiError(response);
+    }
+    return OcrScanResult.fromJson(
+      _decodeBody(response) as Map<String, dynamic>,
+    );
   }
 
   Future<DashboardSummaryModel> getDashboardSummary() async {
@@ -1380,9 +1414,9 @@ class _OperatorDashboardState extends State<OperatorDashboard> {
     try {
       final pickedImage = await _imagePicker.pickImage(
         source: ImageSource.camera,
-        imageQuality: 100,
-        maxWidth: 1920,
-        maxHeight: 1080,
+        imageQuality: 90,
+        maxWidth: 1600,
+        maxHeight: 1200,
       );
 
       if (pickedImage == null) {
@@ -1409,8 +1443,33 @@ class _OperatorDashboardState extends State<OperatorDashboard> {
     Uint8List imageBytes, {
     required String sourceLabel,
   }) async {
-    final recognizedText = await _recognizeTextFromImageBytes(imageBytes);
-    final plateText = _extractPlateText(recognizedText);
+    String recognizedText = '';
+    String plateText = '';
+    var ocrSource = 'Google Vision';
+    var usedLocalFallback = false;
+
+    try {
+      final cloudResult = await widget.api.scanPlateWithCloudOcr(imageBytes);
+      recognizedText = cloudResult.rawText;
+      plateText = cloudResult.plateNumber;
+      ocrSource = 'Google Vision';
+    } catch (_) {
+      // Fall back to local OCR to keep scanning usable when cloud OCR is unavailable.
+      recognizedText = await _recognizeTextFromImageBytes(imageBytes);
+      plateText = _extractPlateText(recognizedText);
+      ocrSource = 'Local OCR fallback';
+      usedLocalFallback = true;
+    }
+
+    if (plateText.isEmpty && !usedLocalFallback) {
+      final localRecognized = await _recognizeTextFromImageBytes(imageBytes);
+      final localPlate = _extractPlateText(localRecognized);
+      if (localPlate.isNotEmpty) {
+        recognizedText = localRecognized;
+        plateText = localPlate;
+        ocrSource = 'Local OCR fallback';
+      }
+    }
 
     if (!mounted) return;
 
@@ -1423,7 +1482,7 @@ class _OperatorDashboardState extends State<OperatorDashboard> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            'Detected from $sourceLabel: $plateText\nRaw: $preview...',
+            'Detected from $sourceLabel ($ocrSource): $plateText\nRaw: $preview...',
           ),
           duration: const Duration(seconds: 3),
         ),
@@ -1439,7 +1498,7 @@ class _OperatorDashboardState extends State<OperatorDashboard> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            'No plate number found in $sourceLabel. Raw text: $preview',
+            'No plate number found in $sourceLabel ($ocrSource). Raw text: $preview',
           ),
           duration: const Duration(seconds: 4),
         ),
