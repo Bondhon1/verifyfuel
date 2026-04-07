@@ -1,4 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException, status
+import logging
 from sqlalchemy.orm import Session
 from sqlalchemy import func
 from typing import List
@@ -20,6 +21,7 @@ from app.services.ocr_service import GoogleVisionOcrService
 from app.services.scheduling_service import SchedulingService
 
 router = APIRouter(prefix="/fuel", tags=["Fuel Management"])
+logger = logging.getLogger(__name__)
 
 
 @router.post("/ocr/scan-plate", response_model=PlateOcrResponse)
@@ -48,6 +50,7 @@ def scan_plate_with_google_vision(
             detail=str(exc),
         ) from exc
     except RuntimeError as exc:
+        logger.exception("OCR pipeline error")
         raise HTTPException(
             status_code=status.HTTP_502_BAD_GATEWAY,
             detail=str(exc),

@@ -71,18 +71,17 @@ class GoogleVisionOcrService:
         credentials_path = settings.GOOGLE_APPLICATION_CREDENTIALS
 
         if credentials_json:
+            credentials_info = cls._parse_credentials_json(credentials_json)
             try:
-                credentials_info = json.loads(credentials_json)
-            except json.JSONDecodeError as exc:
+                credentials = service_account.Credentials.from_service_account_info(
+                    credentials_info,
+                    scopes=["https://www.googleapis.com/auth/cloud-platform"],
+                )
+                credentials.refresh(GoogleAuthRequest())
+            except Exception as exc:
                 raise RuntimeError(
-                    "GOOGLE_APPLICATION_CREDENTIALS_JSON is not valid JSON"
+                    f"Failed to use GOOGLE_APPLICATION_CREDENTIALS_JSON: {exc}"
                 ) from exc
-
-            credentials = service_account.Credentials.from_service_account_info(
-                credentials_info,
-                scopes=["https://www.googleapis.com/auth/cloud-platform"],
-            )
-            credentials.refresh(GoogleAuthRequest())
             headers["Authorization"] = f"Bearer {credentials.token}"
         elif credentials_path:
             if not os.path.exists(credentials_path):
@@ -90,11 +89,16 @@ class GoogleVisionOcrService:
                     "GOOGLE_APPLICATION_CREDENTIALS path does not exist"
                 )
 
-            credentials = service_account.Credentials.from_service_account_file(
-                credentials_path,
-                scopes=["https://www.googleapis.com/auth/cloud-platform"],
-            )
-            credentials.refresh(GoogleAuthRequest())
+            try:
+                credentials = service_account.Credentials.from_service_account_file(
+                    credentials_path,
+                    scopes=["https://www.googleapis.com/auth/cloud-platform"],
+                )
+                credentials.refresh(GoogleAuthRequest())
+            except Exception as exc:
+                raise RuntimeError(
+                    f"Failed to use GOOGLE_APPLICATION_CREDENTIALS file: {exc}"
+                ) from exc
             headers["Authorization"] = f"Bearer {credentials.token}"
         elif settings.GOOGLE_VISION_API_KEY:
             endpoint = f"{endpoint}?key={settings.GOOGLE_VISION_API_KEY}"
@@ -137,6 +141,26 @@ class GoogleVisionOcrService:
             return (annotations[0].get("description") or "").strip()
 
         return ""
+
+    @classmethod
+    def _parse_credentials_json(cls, value: str) -> dict:
+        content = value.strip()
+        if not content:
+            raise RuntimeError("GOOGLE_APPLICATION_CREDENTIALS_JSON is empty")
+
+        try:
+            return json.loads(content)
+        except json.JSONDecodeError:
+            pass
+
+        # Some hosts/users provide base64-encoded JSON to avoid escaping issues.
+        try:
+            decoded = base64.b64decode(content).decode("utf-8")
+            return json.loads(decoded)
+        except Exception as exc:
+            raise RuntimeError(
+                "GOOGLE_APPLICATION_CREDENTIALS_JSON must be valid JSON or base64-encoded JSON"
+            ) from exc
 
     @classmethod
     def extract_plate_number(cls, raw_text: str) -> str:

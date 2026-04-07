@@ -31,6 +31,14 @@ This repository is a monorepo, and Render can deploy only the backend by using t
 4. Click **Save Changes** and redeploy.
 5. Verify OCR endpoint works from your app scan flow.
 
+If you get 502 on POST /fuel/ocr/scan-plate:
+- Check the API response body detail message and Render logs.
+- Ensure GOOGLE_APPLICATION_CREDENTIALS_JSON is either:
+  - Raw JSON string, or
+  - Base64-encoded JSON string.
+- Ensure Vision API is enabled in your Google project.
+- Ensure service account still has a valid active key and has Vision access.
+
 Security note:
 - If your private key was shared publicly, rotate/delete that key in Google Cloud IAM and use a newly generated key.
 
