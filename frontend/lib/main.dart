@@ -1264,6 +1264,8 @@ class _OperatorDashboardState extends State<OperatorDashboard> {
       }
 
       final inputImage = InputImage.fromFilePath(pickedImage.path);
+      // Use latin script with Bengali numeral conversion for compatibility
+      // Google ML Kit's latin recognizer can detect Bengali numerals when properly configured
       final recognizer = TextRecognizer(script: TextRecognitionScript.latin);
       final recognizedText = await recognizer.processImage(inputImage);
       recognizer.close();
@@ -1299,9 +1301,54 @@ class _OperatorDashboardState extends State<OperatorDashboard> {
     }
   }
 
+  /// Convert Bengali numerals to English numerals
+  String _convertBengaliToEnglish(String text) {
+    const bengaliToEnglish = {
+      '০': '0', '১': '1', '২': '2', '৩': '3', '৪': '4',
+      '৫': '5', '৬': '6', '৭': '7', '৮': '8', '৯': '9',
+    };
+    
+    String result = text;
+    bengaliToEnglish.forEach((bengali, english) {
+      result = result.replaceAll(bengali, english);
+    });
+    return result;
+  }
+
+  /// Extract license plate number from OCR text
+  /// Looks for pattern: XX-XXXX or XX-XXX (digits-digits)
+  /// Converts Bengali numerals to English and filters out city/metro text
   String _extractPlateText(String rawText) {
-    final cleaned = rawText.replaceAll(RegExp(r'\s+'), ' ').trim();
-    return cleaned.toUpperCase();
+    // Convert Bengali numerals to English
+    final converted = _convertBengaliToEnglish(rawText);
+    
+    // Split into lines to process separately
+    final lines = converted.split('\n');
+    
+    // Look for line matching plate number pattern: 2-3 digits, hyphen, 3-4 digits
+    final platePattern = RegExp(r'\b(\d{2,3}[-]\d{3,4})\b');
+    
+    for (final line in lines) {
+      final match = platePattern.firstMatch(line);
+      if (match != null) {
+        // Return the matched plate number
+        return match.group(1)!.trim().toUpperCase();
+      }
+    }
+    
+    // Fallback: if no pattern match, try to find any line with digits and hyphen
+    for (final line in lines) {
+      if (line.contains('-') && RegExp(r'\d').hasMatch(line)) {
+        // Extract just the digits and hyphen
+        final digitsAndHyphen = line.replaceAll(RegExp(r'[^\d-]'), '');
+        if (digitsAndHyphen.isNotEmpty && digitsAndHyphen.contains('-')) {
+          return digitsAndHyphen.trim().toUpperCase();
+        }
+      }
+    }
+    
+    // Last resort: return cleaned text with Bengali converted
+    return converted.replaceAll(RegExp(r'\s+'), ' ').trim().toUpperCase();
   }
 
   @override
