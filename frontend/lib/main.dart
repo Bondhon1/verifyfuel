@@ -566,7 +566,7 @@ class _VerifyFuelAppState extends State<VerifyFuelApp> {
 
         return MaterialApp(
           debugShowCheckedModeBanner: false,
-          title: 'VerifyFuel',
+          title: 'ভেরিফাইফুয়েল',
           theme: ThemeData(
             useMaterial3: true,
             colorScheme: lightScheme,
@@ -735,7 +735,7 @@ class _AuthViewState extends State<AuthView> {
                         ),
                         const SizedBox(height: 8),
                         const Text(
-                          'Automated Fuel Management System',
+                          'স্বয়ংক্রিয় জ্বালানি ব্যবস্থাপনা সিস্টেম',
                           style: TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.w500,
@@ -834,7 +834,7 @@ class _AuthViewState extends State<AuthView> {
           ),
           const SizedBox(height: 16),
           const Text(
-            'Sign In',
+            'লগইন',
             style: TextStyle(
               fontSize: 24,
               fontWeight: FontWeight.w900,
@@ -843,7 +843,7 @@ class _AuthViewState extends State<AuthView> {
           ),
           const SizedBox(height: 8),
           Text(
-            'Access your account',
+            'আপনার অ্যাকাউন্টে প্রবেশ করুন',
             style: TextStyle(
               fontSize: 14,
               fontWeight: FontWeight.w500,
@@ -854,7 +854,7 @@ class _AuthViewState extends State<AuthView> {
           TextField(
             controller: _loginUserController,
             decoration: InputDecoration(
-              labelText: 'Username',
+              labelText: 'ব্যবহারকারীর নাম',
               labelStyle: const TextStyle(
                 color: Color(0xFF0E7A6A),
                 fontWeight: FontWeight.w600,
@@ -884,7 +884,7 @@ class _AuthViewState extends State<AuthView> {
             controller: _loginPassController,
             obscureText: true,
             decoration: InputDecoration(
-              labelText: 'Password',
+              labelText: 'পাসওয়ার্ড',
               labelStyle: const TextStyle(
                 color: Color(0xFF0E7A6A),
                 fontWeight: FontWeight.w600,
@@ -936,8 +936,8 @@ class _AuthViewState extends State<AuthView> {
                         valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
                       ),
                     )
-                  : const Text(
-                      'Sign In',
+                    : const Text(
+                      'লগইন',
                       style: TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.w700,
@@ -956,11 +956,11 @@ class _AuthViewState extends State<AuthView> {
                 text: const TextSpan(
                   children: [
                     TextSpan(
-                      text: "Don't have an account? ",
+                      text: 'অ্যাকাউন্ট নেই? ',
                       style: TextStyle(color: Colors.grey, fontSize: 14),
                     ),
                     TextSpan(
-                      text: 'Create Account',
+                      text: 'অ্যাকাউন্ট তৈরি করুন',
                       style: TextStyle(
                         color: Color(0xFF0E7A6A),
                         fontWeight: FontWeight.bold,
@@ -1008,7 +1008,7 @@ class _AuthViewState extends State<AuthView> {
           ),
           const SizedBox(height: 16),
           const Text(
-            'Create Account',
+            'অ্যাকাউন্ট তৈরি',
             style: TextStyle(
               fontSize: 24,
               fontWeight: FontWeight.w900,
@@ -1017,7 +1017,7 @@ class _AuthViewState extends State<AuthView> {
           ),
           const SizedBox(height: 8),
           Text(
-            'Join the fuel management system',
+            'জ্বালানি ব্যবস্থাপনা সিস্টেমে যোগ দিন',
             style: TextStyle(
               fontSize: 14,
               fontWeight: FontWeight.w500,
@@ -1028,7 +1028,7 @@ class _AuthViewState extends State<AuthView> {
           TextField(
             controller: _regNameController,
             decoration: InputDecoration(
-              labelText: 'Full Name',
+              labelText: 'পূর্ণ নাম',
               labelStyle: const TextStyle(
                 color: Color(0xFF0E7A6A),
                 fontWeight: FontWeight.w600,
@@ -1057,7 +1057,7 @@ class _AuthViewState extends State<AuthView> {
           TextField(
             controller: _regUserController,
             decoration: InputDecoration(
-              labelText: 'Username',
+              labelText: 'ব্যবহারকারীর নাম',
               labelStyle: const TextStyle(
                 color: Color(0xFF0E7A6A),
                 fontWeight: FontWeight.w600,
@@ -1087,7 +1087,7 @@ class _AuthViewState extends State<AuthView> {
             controller: _regEmailController,
             keyboardType: TextInputType.emailAddress,
             decoration: InputDecoration(
-              labelText: 'Email',
+              labelText: 'ইমেইল',
               labelStyle: const TextStyle(
                 color: Color(0xFF0E7A6A),
                 fontWeight: FontWeight.w600,
@@ -1117,7 +1117,7 @@ class _AuthViewState extends State<AuthView> {
             controller: _regPhoneController,
             keyboardType: TextInputType.phone,
             decoration: InputDecoration(
-              labelText: 'Phone (optional)',
+              labelText: 'ফোন (ঐচ্ছিক)',
               labelStyle: const TextStyle(
                 color: Color(0xFF0E7A6A),
                 fontWeight: FontWeight.w600,
@@ -1147,7 +1147,7 @@ class _AuthViewState extends State<AuthView> {
             controller: _regPassController,
             obscureText: true,
             decoration: InputDecoration(
-              labelText: 'Password',
+              labelText: 'পাসওয়ার্ড',
               labelStyle: const TextStyle(
                 color: Color(0xFF0E7A6A),
                 fontWeight: FontWeight.w600,
@@ -1185,11 +1185,11 @@ class _AuthViewState extends State<AuthView> {
               items: const [
                 DropdownMenuItem(
                   value: 'owner',
-                  child: Text('🚗 Vehicle Owner'),
+                  child: Text('🚗 গাড়ির মালিক'),
                 ),
                 DropdownMenuItem(
                   value: 'operator',
-                  child: Text('⛽ Pump Operator'),
+                  child: Text('⛽ পাম্প অপারেটর'),
                 ),
               ],
               onChanged: (value) => setState(() => _role = value ?? 'owner'),
@@ -1235,8 +1235,8 @@ class _AuthViewState extends State<AuthView> {
                         valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
                       ),
                     )
-                  : const Text(
-                      'Create Account & Sign In',
+                    : const Text(
+                      'অ্যাকাউন্ট তৈরি ও লগইন',
                       style: TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.w700,
@@ -1255,11 +1255,11 @@ class _AuthViewState extends State<AuthView> {
                 text: const TextSpan(
                   children: [
                     TextSpan(
-                      text: 'Already have an account? ',
+                      text: 'আগে থেকেই অ্যাকাউন্ট আছে? ',
                       style: TextStyle(color: Colors.grey, fontSize: 14),
                     ),
                     TextSpan(
-                      text: 'Sign In',
+                      text: 'লগইন',
                       style: TextStyle(
                         color: Color(0xFFF79B2E),
                         fontWeight: FontWeight.bold,
@@ -1313,7 +1313,7 @@ class _HomeShellState extends State<HomeShell> {
     return Scaffold(
       appBar: showAppBar
           ? AppBar(
-              title: const Text('VerifyFuel'),
+              title: const Text('ভেরিফাইফুয়েল'),
               actions: [
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 10),
@@ -1393,7 +1393,7 @@ class _OperatorDashboardState extends State<OperatorDashboard> {
       if (!mounted) return;
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(SnackBar(content: Text('Eligibility check failed: $e')));
+      ).showSnackBar(SnackBar(content: Text('যোগ্যতা যাচাই ব্যর্থ: $e')));
     } finally {
       if (mounted) {
         setState(() => _loading = false);
@@ -1413,7 +1413,7 @@ class _OperatorDashboardState extends State<OperatorDashboard> {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Fuel entry recorded and next schedule assigned.'),
+          content: Text('জ্বালানি এন্ট্রি সংরক্ষিত হয়েছে এবং পরবর্তী সময়সূচি নির্ধারিত হয়েছে।'),
         ),
       );
       _checkEligibility();
@@ -1421,7 +1421,7 @@ class _OperatorDashboardState extends State<OperatorDashboard> {
       if (!mounted) return;
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(SnackBar(content: Text('Record failed: $e')));
+      ).showSnackBar(SnackBar(content: Text('এন্ট্রি সংরক্ষণ ব্যর্থ: $e')));
     } finally {
       if (mounted) {
         setState(() => _loading = false);
@@ -1452,7 +1452,7 @@ class _OperatorDashboardState extends State<OperatorDashboard> {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Scanner failed: $e. You can type plate manually.'),
+          content: Text('স্ক্যান ব্যর্থ: $e। আপনি প্লেট নম্বর হাতে লিখতে পারেন।'),
         ),
       );
     } finally {
@@ -1478,7 +1478,7 @@ class _OperatorDashboardState extends State<OperatorDashboard> {
       ocrSource = 'Google Vision';
     } catch (_) {
       if (kIsWeb) {
-        throw Exception('Google Vision OCR is not available from backend');
+        throw Exception('ব্যাকএন্ড থেকে Google Vision OCR পাওয়া যাচ্ছে না');
       }
       // Fall back to local OCR to keep scanning usable when cloud OCR is unavailable.
       recognizedText = await _recognizeTextFromImageBytes(imageBytes);
@@ -1508,7 +1508,7 @@ class _OperatorDashboardState extends State<OperatorDashboard> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            'Detected from $sourceLabel ($ocrSource): $plateText\nRaw: $preview...',
+            '$sourceLabel ($ocrSource) থেকে শনাক্ত: $plateText\nটেক্সট: $preview...',
           ),
           duration: const Duration(seconds: 3),
         ),
@@ -1524,7 +1524,7 @@ class _OperatorDashboardState extends State<OperatorDashboard> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            'No plate number found in $sourceLabel ($ocrSource). Raw text: $preview',
+            '$sourceLabel ($ocrSource)-এ কোনো প্লেট নম্বর পাওয়া যায়নি। টেক্সট: $preview',
           ),
           duration: const Duration(seconds: 4),
         ),
@@ -1540,7 +1540,7 @@ class _OperatorDashboardState extends State<OperatorDashboard> {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(
-          'Plate scanned: $plateText - Please verify and edit if needed',
+          'প্লেট স্ক্যান হয়েছে: $plateText - প্রয়োজন হলে যাচাই করে সম্পাদনা করুন',
         ),
       ),
     );
@@ -1696,7 +1696,7 @@ class _OperatorDashboardState extends State<OperatorDashboard> {
                         crossAxisAlignment: CrossAxisAlignment.end,
                         children: [
                           Text(
-                            'Account Name',
+                            'অ্যাকাউন্ট নাম',
                             style: Theme.of(context).textTheme.labelMedium?.copyWith(
                                   color: const Color(0xFF4E4E4E),
                                   fontWeight: FontWeight.w700,
@@ -1704,7 +1704,7 @@ class _OperatorDashboardState extends State<OperatorDashboard> {
                                 ),
                           ),
                           Text(
-                            'Operator',
+                            'অপারেটর',
                             style: Theme.of(context).textTheme.labelSmall?.copyWith(
                                   color: const Color(0xFF4E4E4E),
                                   fontWeight: FontWeight.w700,
@@ -1724,7 +1724,7 @@ class _OperatorDashboardState extends State<OperatorDashboard> {
                         ),
                         child: IconButton(
                           padding: EdgeInsets.zero,
-                          tooltip: 'Sign out',
+                          tooltip: 'লগআউট',
                           onPressed: widget.onSignOut,
                           icon: const Icon(
                             Icons.logout_rounded,
@@ -1740,13 +1740,13 @@ class _OperatorDashboardState extends State<OperatorDashboard> {
                   const SizedBox(height: 18),
                   _DashboardPillField(
                     controller: _plateCtrl,
-                    hintText: 'Type Vehicle Plate Number',
+                    hintText: 'যানবাহনের প্লেট নম্বর লিখুন',
                     textColor: const Color(0xFF1F1F1F),
                     hintColor: const Color(0xFF2F2F2F),
                   ),
                   const SizedBox(height: 18),
                   _DashboardPillButton(
-                    label: 'Check Eligibility',
+                    label: 'যোগ্যতা যাচাই',
                     onPressed: plateText.isEmpty || _loading ? null : _checkEligibility,
                   ),
                   const SizedBox(height: 56),
@@ -1757,7 +1757,7 @@ class _OperatorDashboardState extends State<OperatorDashboard> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              'Amount (Littler)',
+                              'পরিমাণ (লিটার)',
                               style: Theme.of(context).textTheme.titleSmall?.copyWith(
                                     color: const Color(0xFF9A9A9A),
                                     fontWeight: FontWeight.w500,
@@ -1767,7 +1767,7 @@ class _OperatorDashboardState extends State<OperatorDashboard> {
                             const SizedBox(height: 8),
                             _DashboardPillField(
                               controller: _litersCtrl,
-                              hintText: '20 Liter',
+                              hintText: '২০ লিটার',
                               textColor: const Color(0xFF1F1F1F),
                               hintColor: const Color(0xFF2F2F2F),
                             ),
@@ -1780,7 +1780,7 @@ class _OperatorDashboardState extends State<OperatorDashboard> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              'Fuel Type',
+                              'জ্বালানির ধরন',
                               style: Theme.of(context).textTheme.titleSmall?.copyWith(
                                     color: const Color(0xFF9A9A9A),
                                     fontWeight: FontWeight.w500,
@@ -1799,7 +1799,7 @@ class _OperatorDashboardState extends State<OperatorDashboard> {
                   ),
                   const SizedBox(height: 24),
                   Text(
-                    'Station Name',
+                    'স্টেশন নাম',
                     style: Theme.of(context).textTheme.titleSmall?.copyWith(
                           color: const Color(0xFFC0C0C0),
                           fontWeight: FontWeight.w500,
@@ -1809,7 +1809,7 @@ class _OperatorDashboardState extends State<OperatorDashboard> {
                   const SizedBox(height: 8),
                   _DashboardPillField(
                     controller: _stationCtrl,
-                    hintText: 'Main Pump',
+                    hintText: 'মেইন পাম্প',
                     textColor: const Color(0xFF1F1F1F),
                     hintColor: const Color(0xFF2F2F2F),
                   ),
@@ -1817,7 +1817,7 @@ class _OperatorDashboardState extends State<OperatorDashboard> {
                   Align(
                     alignment: Alignment.centerLeft,
                     child: _DashboardPillButton(
-                      label: 'Record Entry',
+                      label: 'এন্ট্রি সংরক্ষণ',
                       onPressed: _loading ? null : _recordFuel,
                       width: 148,
                     ),
@@ -1883,7 +1883,7 @@ class _ScannerHeroCard extends StatelessWidget {
               mainAxisSize: MainAxisSize.min,
               children: [
                 Text(
-                  'Operator Scanner',
+                  'অপারেটর স্ক্যানার',
                   style: TextStyle(
                     color: Colors.white,
                     fontSize: 25,
@@ -1893,7 +1893,7 @@ class _ScannerHeroCard extends StatelessWidget {
                 ),
                 SizedBox(height: 8),
                 Text(
-                  'Operator Scanner Operator Scanner ergwerg\nOperator Scanner Operator Scanner',
+                  'স্ক্যান করে প্লেট নম্বর ধরুন\nযোগ্যতা যাচাই করে এন্ট্রি দিন',
                   style: TextStyle(
                     color: Color(0xFFF4FFFD),
                     fontSize: 11,
@@ -1982,9 +1982,9 @@ class _DashboardPillDropdown extends StatelessWidget {
           contentPadding: EdgeInsets.symmetric(horizontal: 14, vertical: 12),
         ),
         items: const [
-          DropdownMenuItem(value: 'Petrol', child: Text('Fuel Type')),
-          DropdownMenuItem(value: 'Diesel', child: Text('Diesel')),
-          DropdownMenuItem(value: 'Octane', child: Text('Octane')),
+          DropdownMenuItem(value: 'Petrol', child: Text('পেট্রোল')),
+          DropdownMenuItem(value: 'Diesel', child: Text('ডিজেল')),
+          DropdownMenuItem(value: 'Octane', child: Text('অকটেন')),
         ],
       ),
     );
@@ -2062,7 +2062,7 @@ class _EligibilityBanner extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            eligibility.isEligible ? 'Eligible' : 'Not Eligible',
+            eligibility.isEligible ? 'যোগ্য' : 'অযোগ্য',
             style: TextStyle(
               color: accent,
               fontWeight: FontWeight.w800,
@@ -2073,12 +2073,12 @@ class _EligibilityBanner extends StatelessWidget {
           Text(eligibility.message),
           if (eligibility.hoursRemaining != null) ...[
             const SizedBox(height: 4),
-            Text('Hours Remaining: ${eligibility.hoursRemaining}'),
+            Text('বাকি সময়: ${eligibility.hoursRemaining} ঘণ্টা'),
           ],
           if (eligibility.nextSlotStart != null && eligibility.nextSlotEnd != null) ...[
             const SizedBox(height: 4),
             Text(
-              'Next Slot: ${formatter.format(eligibility.nextSlotStart!.toLocal())} - ${formatter.format(eligibility.nextSlotEnd!.toLocal())}',
+              'পরবর্তী স্লট: ${formatter.format(eligibility.nextSlotStart!.toLocal())} - ${formatter.format(eligibility.nextSlotEnd!.toLocal())}',
             ),
           ],
         ],
@@ -2138,14 +2138,14 @@ class _OwnerDashboardState extends State<OwnerDashboard> {
       );
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Vehicle added successfully.')),
+        const SnackBar(content: Text('যানবাহন সফলভাবে যোগ হয়েছে।')),
       );
       _reloadVehicles();
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(SnackBar(content: Text('Add vehicle failed: $e')));
+      ).showSnackBar(SnackBar(content: Text('যানবাহন যোগ ব্যর্থ: $e')));
     }
   }
 
@@ -2157,7 +2157,7 @@ class _OwnerDashboardState extends State<OwnerDashboard> {
       if (!mounted) return;
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(SnackBar(content: Text('Status check failed: $e')));
+      ).showSnackBar(SnackBar(content: Text('স্ট্যাটাস যাচাই ব্যর্থ: $e')));
     }
   }
 
@@ -2208,7 +2208,7 @@ class _OwnerDashboardState extends State<OwnerDashboard> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: const [
                       Text(
-                        'Scanner Mode',
+                        'স্ক্যানার মোড',
                         style: TextStyle(
                           color: Colors.white,
                           fontSize: 22,
@@ -2217,7 +2217,7 @@ class _OwnerDashboardState extends State<OwnerDashboard> {
                       ),
                       SizedBox(height: 4),
                       Text(
-                        'Scan a plate to check status and manage fuel access.',
+                        'প্লেট স্ক্যান করে স্ট্যাটাস দেখুন এবং জ্বালানি অনুমতি পরিচালনা করুন।',
                         style: TextStyle(
                           color: Colors.white70,
                           fontSize: 13,
@@ -2254,7 +2254,7 @@ class _OwnerDashboardState extends State<OwnerDashboard> {
                       const SizedBox(width: 12),
                       const Expanded(
                         child: Text(
-                          'Vehicle Owner Console',
+                          'যানবাহন মালিক কনসোল',
                           style: TextStyle(
                             fontSize: 24,
                             fontWeight: FontWeight.w800,
@@ -2265,23 +2265,23 @@ class _OwnerDashboardState extends State<OwnerDashboard> {
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    'Add vehicles, scan a plate, and track fuel eligibility in real time.',
+                    'যানবাহন যোগ করুন, প্লেট স্ক্যান করুন এবং রিয়েল-টাইমে যোগ্যতা দেখুন।',
                     style: TextStyle(color: Colors.blueGrey.shade700),
                   ),
                   const SizedBox(height: 12),
                   TextField(
                     controller: _plateCtrl,
                     decoration: InputDecoration(
-                      labelText: 'Plate Number',
+                      labelText: 'প্লেট নম্বর',
                       prefixIcon: const Icon(Icons.pin_outlined),
                       suffixIcon: IconButton(
-                        tooltip: 'Scan plate',
+                        tooltip: 'প্লেট স্ক্যান',
                         onPressed: () async {
                           if (mounted) {
                             ScaffoldMessenger.of(context).showSnackBar(
                               const SnackBar(
                                 content: Text(
-                                  'Use the scanner button in the operator console for camera OCR.',
+                                  'ক্যামেরা OCR-এর জন্য অপারেটর কনসোলের স্ক্যানার বোতাম ব্যবহার করুন।',
                                 ),
                               ),
                             );
@@ -2298,7 +2298,7 @@ class _OwnerDashboardState extends State<OwnerDashboard> {
                         child: TextField(
                           controller: _typeCtrl,
                           decoration: const InputDecoration(
-                            labelText: 'Vehicle Type',
+                            labelText: 'যানবাহনের ধরন',
                           ),
                         ),
                       ),
@@ -2307,7 +2307,7 @@ class _OwnerDashboardState extends State<OwnerDashboard> {
                         child: TextField(
                           controller: _yearCtrl,
                           keyboardType: TextInputType.number,
-                          decoration: const InputDecoration(labelText: 'Year'),
+                          decoration: const InputDecoration(labelText: 'বছর'),
                         ),
                       ),
                     ],
@@ -2318,14 +2318,14 @@ class _OwnerDashboardState extends State<OwnerDashboard> {
                       Expanded(
                         child: TextField(
                           controller: _makeCtrl,
-                          decoration: const InputDecoration(labelText: 'Make'),
+                          decoration: const InputDecoration(labelText: 'ব্র্যান্ড'),
                         ),
                       ),
                       const SizedBox(width: 10),
                       Expanded(
                         child: TextField(
                           controller: _modelCtrl,
-                          decoration: const InputDecoration(labelText: 'Model'),
+                          decoration: const InputDecoration(labelText: 'মডেল'),
                         ),
                       ),
                     ],
@@ -2337,14 +2337,14 @@ class _OwnerDashboardState extends State<OwnerDashboard> {
                       FilledButton.icon(
                         onPressed: _addVehicle,
                         icon: const Icon(Icons.add_road_rounded),
-                        label: const Text('Add Vehicle'),
+                        label: const Text('যানবাহন যোগ করুন'),
                       ),
                       FilledButton.tonalIcon(
                         onPressed: _plateCtrl.text.trim().isEmpty
                             ? null
                             : () => _checkStatus(_plateCtrl.text.trim()),
                         icon: const Icon(Icons.query_stats_rounded),
-                        label: const Text('Check Status'),
+                        label: const Text('স্ট্যাটাস দেখুন'),
                       ),
                     ],
                   ),
@@ -2365,12 +2365,12 @@ class _OwnerDashboardState extends State<OwnerDashboard> {
                           Text(_status!.message),
                           if (_status!.hoursRemaining != null)
                             Text(
-                              'Countdown: ${_status!.hoursRemaining} hours left',
+                              'গণনা: ${_status!.hoursRemaining} ঘণ্টা বাকি',
                             ),
                           if (_status!.nextSlotStart != null &&
                               _status!.nextSlotEnd != null)
                             Text(
-                              'Next Slot: ${formatter.format(_status!.nextSlotStart!.toLocal())} - ${formatter.format(_status!.nextSlotEnd!.toLocal())}',
+                              'পরবর্তী স্লট: ${formatter.format(_status!.nextSlotStart!.toLocal())} - ${formatter.format(_status!.nextSlotEnd!.toLocal())}',
                             ),
                         ],
                       ),
@@ -2378,7 +2378,7 @@ class _OwnerDashboardState extends State<OwnerDashboard> {
                   ],
                   const SizedBox(height: 18),
                   const Text(
-                    'My Vehicles',
+                    'আমার যানবাহন',
                     style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
                   ),
                   const SizedBox(height: 8),
@@ -2393,13 +2393,13 @@ class _OwnerDashboardState extends State<OwnerDashboard> {
                       }
                       if (snapshot.hasError) {
                         return Text(
-                          'Failed to load vehicles: ${snapshot.error}',
+                          'যানবাহন লোড ব্যর্থ: ${snapshot.error}',
                         );
                       }
                       final vehicles = snapshot.data ?? [];
                       if (vehicles.isEmpty) {
                         return const Text(
-                          'No vehicles yet. Add your first one above.',
+                          'এখনও কোনো যানবাহন নেই। উপরে প্রথমটি যোগ করুন।',
                         );
                       }
                       return Column(
@@ -2415,7 +2415,7 @@ class _OwnerDashboardState extends State<OwnerDashboard> {
                                   ),
                                   title: Text(vehicle.plateNumber),
                                   subtitle: Text(
-                                    '${vehicle.vehicleType ?? 'Vehicle'} • ${vehicle.make ?? ''} ${vehicle.model ?? ''}'
+                                    '${vehicle.vehicleType ?? 'যানবাহন'} • ${vehicle.make ?? ''} ${vehicle.model ?? ''}'
                                         .trim(),
                                   ),
                                   trailing: IconButton(
@@ -2484,7 +2484,7 @@ class _AdminDashboardState extends State<AdminDashboard> {
                 return Card(
                   child: Padding(
                     padding: const EdgeInsets.all(12),
-                    child: Text('Dashboard load failed: ${snapshot.error}'),
+                    child: Text('ড্যাশবোর্ড লোড ব্যর্থ: ${snapshot.error}'),
                   ),
                 );
               }
@@ -2492,27 +2492,27 @@ class _AdminDashboardState extends State<AdminDashboard> {
               return _KpiStrip(
                 items: [
                   _KpiData(
-                    title: 'Vehicles',
+                    title: 'যানবাহন',
                     value: '${summary.totalVehicles}',
                     icon: Icons.directions_car_filled_rounded,
                   ),
                   _KpiData(
-                    title: 'Users',
+                    title: 'ব্যবহারকারী',
                     value: '${summary.totalUsers}',
                     icon: Icons.group_rounded,
                   ),
                   _KpiData(
-                    title: 'Today Fuel',
+                    title: 'আজকের জ্বালানি',
                     value: '${summary.todayFuelEntries}',
                     icon: Icons.local_gas_station_rounded,
                   ),
                   _KpiData(
-                    title: 'Eligible',
+                    title: 'যোগ্য',
                     value: '${summary.eligibleVehicles}',
                     icon: Icons.verified_rounded,
                   ),
                   _KpiData(
-                    title: 'Denied',
+                    title: 'অযোগ্য',
                     value: '${summary.deniedVehicles}',
                     icon: Icons.gpp_bad_rounded,
                   ),
@@ -2531,7 +2531,7 @@ class _AdminDashboardState extends State<AdminDashboard> {
                     children: [
                       const Expanded(
                         child: Text(
-                          'Admin Monitoring',
+                          'অ্যাডমিন মনিটরিং',
                           style: TextStyle(
                             fontSize: 24,
                             fontWeight: FontWeight.w800,
@@ -2547,7 +2547,7 @@ class _AdminDashboardState extends State<AdminDashboard> {
                     ],
                   ),
                   Text(
-                    'Centralized daily fuel visibility and operational oversight.',
+                    'দৈনিক জ্বালানি কার্যক্রমের কেন্দ্রীভূত পর্যবেক্ষণ।',
                     style: TextStyle(color: Colors.blueGrey.shade700),
                   ),
                   const SizedBox(height: 12),
@@ -2559,12 +2559,12 @@ class _AdminDashboardState extends State<AdminDashboard> {
                       }
                       if (snapshot.hasError) {
                         return Text(
-                          'Failed to load entries: ${snapshot.error}',
+                          'এন্ট্রি লোড ব্যর্থ: ${snapshot.error}',
                         );
                       }
                       final entries = snapshot.data ?? [];
                       if (entries.isEmpty) {
-                        return const Text('No fuel entries found yet.');
+                        return const Text('এখনও কোনো জ্বালানি এন্ট্রি নেই।');
                       }
                       return Column(
                         children: entries.take(20).map((entry) {
@@ -2575,10 +2575,10 @@ class _AdminDashboardState extends State<AdminDashboard> {
                               child: Text('${entry.vehicleId}'),
                             ),
                             title: Text(
-                              'Vehicle ID ${entry.vehicleId} • ${entry.amountLiters}L ${entry.fuelType}',
+                              'যানবাহন আইডি ${entry.vehicleId} • ${entry.amountLiters}L ${entry.fuelType}',
                             ),
                             subtitle: Text(
-                              'Entry ${formatter.format(entry.entryDateTime.toLocal())}',
+                              'এন্ট্রি ${formatter.format(entry.entryDateTime.toLocal())}',
                             ),
                             trailing: Text(
                               formatter.format(entry.nextSlotStart.toLocal()),
