@@ -1,4 +1,4 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, Response
 from fastapi.middleware.cors import CORSMiddleware
 from app.routers import auth, vehicles, fuel
 from app.core.database import engine, Base
@@ -32,6 +32,10 @@ async def root():
         "version": "1.0.0",
         "docs": "/docs"
     }
+
+@app.head("/")
+async def root_head():
+    return Response(status_code=200)
 
 @app.get("/health")
 async def health_check():
