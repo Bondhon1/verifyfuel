@@ -1,5 +1,4 @@
 import 'dart:convert';
-import 'dart:typed_data';
 import 'dart:ui' as ui;
 
 import 'package:flutter/foundation.dart';
@@ -708,11 +707,11 @@ class _AuthViewState extends State<AuthView> {
                         Container(
                           padding: const EdgeInsets.all(16),
                           decoration: BoxDecoration(
-                            color: Colors.white.withOpacity(0.95),
+                            color: Colors.white.withValues(alpha: 0.95),
                             shape: BoxShape.circle,
                             boxShadow: [
                               BoxShadow(
-                                color: Colors.black.withOpacity(0.1),
+                                color: Colors.black.withValues(alpha: 0.1),
                                 blurRadius: 20,
                                 offset: const Offset(0, 8),
                               ),
@@ -811,7 +810,7 @@ class _AuthViewState extends State<AuthView> {
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.08),
+            color: Colors.black.withValues(alpha: 0.08),
             blurRadius: 24,
             offset: const Offset(0, 8),
           ),
@@ -985,7 +984,7 @@ class _AuthViewState extends State<AuthView> {
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.08),
+            color: Colors.black.withValues(alpha: 0.08),
             blurRadius: 24,
             offset: const Offset(0, 8),
           ),
@@ -1295,7 +1294,7 @@ class HomeShell extends StatefulWidget {
 }
 
 class _HomeShellState extends State<HomeShell> {
-  int _index = 0;
+  final int _index = 0;
 
   @override
   Widget build(BuildContext context) {
@@ -1307,25 +1306,29 @@ class _HomeShellState extends State<HomeShell> {
       if (role == 'admin') AdminDashboard(api: api),
     ];
 
+    final showAppBar = role != 'operator';
+
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('VerifyFuel'),
-        actions: [
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 10),
-            child: Center(
-              child: Text(
-                '${widget.user.username} (${widget.user.role.toUpperCase()})',
-                style: TextStyle(color: Colors.blueGrey.shade700),
-              ),
-            ),
-          ),
-          IconButton(
-            icon: const Icon(Icons.logout_rounded),
-            onPressed: widget.controller.signOut,
-          ),
-        ],
-      ),
+      appBar: showAppBar
+          ? AppBar(
+              title: const Text('VerifyFuel'),
+              actions: [
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 10),
+                  child: Center(
+                    child: Text(
+                      '${widget.user.username} (${widget.user.role.toUpperCase()})',
+                      style: TextStyle(color: Colors.blueGrey.shade700),
+                    ),
+                  ),
+                ),
+                IconButton(
+                  icon: const Icon(Icons.logout_rounded),
+                  onPressed: widget.controller.signOut,
+                ),
+              ],
+            )
+          : null,
       body: tabs[_index],
     );
   }
@@ -1358,6 +1361,16 @@ class _OperatorDashboardState extends State<OperatorDashboard> {
     _litersCtrl.dispose();
     _stationCtrl.dispose();
     super.dispose();
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _plateCtrl.addListener(() {
+      if (mounted) {
+        setState(() {});
+      }
+    });
   }
 
   Future<void> _checkEligibility() async {
@@ -1639,243 +1652,435 @@ class _OperatorDashboardState extends State<OperatorDashboard> {
   @override
   Widget build(BuildContext context) {
     final formatter = DateFormat('dd MMM yyyy, hh:mm a');
+    final plateText = _plateCtrl.text.trim();
 
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(18),
-      child: Column(
-        children: [
-          Container(
-            width: double.infinity,
-            decoration: BoxDecoration(
-              gradient: const LinearGradient(
-                colors: [Color(0xFF0E7A6A), Color(0xFF13A38E)],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ),
-              borderRadius: BorderRadius.circular(24),
-              boxShadow: [
-                BoxShadow(
-                  color: const Color(0xFF0E7A6A).withOpacity(0.18),
-                  blurRadius: 24,
-                  offset: const Offset(0, 10),
-                ),
-              ],
-            ),
-            padding: const EdgeInsets.all(18),
-            child: Row(
-              children: [
-                Container(
-                  width: 56,
-                  height: 56,
-                  decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.16),
-                    borderRadius: BorderRadius.circular(16),
-                  ),
-                  child: const Icon(
-                    Icons.document_scanner_rounded,
-                    color: Colors.white,
-                    size: 30,
-                  ),
-                ),
-                const SizedBox(width: 14),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: const [
-                      Text(
-                        'Operator Scanner',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 22,
-                          fontWeight: FontWeight.w900,
-                        ),
-                      ),
-                      SizedBox(height: 4),
-                      Text(
-                        'Scan a vehicle plate, verify eligibility, and record fuel.',
-                        style: TextStyle(
-                          color: Colors.white70,
-                          fontSize: 13,
-                          height: 1.3,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 14),
-          Card(
-            child: Padding(
-              padding: const EdgeInsets.all(16),
+    return SafeArea(
+      child: ColoredBox(
+        color: Colors.white,
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.fromLTRB(16, 14, 16, 24),
+          child: Center(
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 430),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Row(
-                    children: [
-                      Container(
-                        width: 44,
-                        height: 44,
-                        decoration: BoxDecoration(
-                          color: const Color(0xFFE7F4F1),
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: const Icon(
-                          Icons.qr_code_scanner_rounded,
-                          color: Color(0xFF0E7A6A),
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      const Expanded(
-                        child: Text(
-                          'Operator Console',
-                          style: TextStyle(
-                            fontWeight: FontWeight.w800,
-                            fontSize: 24,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    'Use the scanner button first, then confirm eligibility and record fuel.',
-                    style: TextStyle(color: Colors.blueGrey.shade700),
-                  ),
-                  const SizedBox(height: 14),
-                  TextField(
-                    controller: _plateCtrl,
-                    decoration: InputDecoration(
-                      labelText: 'Vehicle Plate Number',
-                      hintText: 'DHAKA-METRO-12-3456',
-                      prefixIcon: const Icon(Icons.pin_outlined),
-                      suffixIcon: IconButton(
-                        tooltip: 'Scan plate',
-                        onPressed: _busy ? null : _scanPlateFromCamera,
-                        icon: const Icon(Icons.document_scanner_rounded),
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Expanded(
+                      child: Text(
+                        'VerifyFuel',
+                        style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                              fontWeight: FontWeight.w800,
+                              color: const Color(0xFF2E2E2E),
+                              letterSpacing: -0.6,
+                            ),
                       ),
                     ),
-                  ),
-                  const SizedBox(height: 12),
-                  Wrap(
-                    spacing: 10,
-                    runSpacing: 10,
-                    children: [
-                      FilledButton.tonalIcon(
-                        onPressed: _busy ? null : _scanPlateFromCamera,
-                        icon: const Icon(Icons.document_scanner_rounded),
-                        label: const Text('Scan Plate'),
-                      ),
-                      FilledButton.icon(
-                        onPressed: _loading ? null : _checkEligibility,
-                        icon: const Icon(Icons.verified_rounded),
-                        label: const Text('Check Eligibility'),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 12),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: TextField(
-                          controller: _litersCtrl,
-                          keyboardType: TextInputType.number,
-                          decoration: const InputDecoration(
-                            labelText: 'Amount (Liters)',
-                            prefixIcon: Icon(Icons.local_gas_station_rounded),
-                          ),
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.end,
+                      children: [
+                        Text(
+                          'Account Name',
+                          style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                                color: const Color(0xFF5E5E5E),
+                                fontWeight: FontWeight.w700,
+                              ),
                         ),
-                      ),
-                      const SizedBox(width: 10),
-                      Expanded(
-                        child: DropdownButtonFormField<String>(
-                          initialValue: _fuelType,
-                          items: const [
-                            DropdownMenuItem(
-                              value: 'Petrol',
-                              child: Text('Petrol'),
-                            ),
-                            DropdownMenuItem(
-                              value: 'Diesel',
-                              child: Text('Diesel'),
-                            ),
-                            DropdownMenuItem(
-                              value: 'Octane',
-                              child: Text('Octane'),
-                            ),
-                          ],
-                          onChanged: (value) =>
-                              setState(() => _fuelType = value ?? 'Petrol'),
-                          decoration: const InputDecoration(
-                            labelText: 'Fuel Type',
-                          ),
+                        Text(
+                          'Operator',
+                          style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                                color: const Color(0xFF5E5E5E),
+                                fontWeight: FontWeight.w700,
+                              ),
                         ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 10),
-                  TextField(
-                    controller: _stationCtrl,
-                    decoration: const InputDecoration(
-                      labelText: 'Station Name',
+                      ],
                     ),
-                  ),
-                  const SizedBox(height: 14),
-                  Wrap(
-                    spacing: 10,
-                    children: [
-                      FilledButton.tonalIcon(
-                        onPressed: _loading ? null : _recordFuel,
-                        icon: const Icon(Icons.save_alt_rounded),
-                        label: const Text('Record Fuel Entry'),
-                      ),
-                    ],
-                  ),
-                  if (_eligibility != null) ...[
-                    const SizedBox(height: 14),
+                    const SizedBox(width: 10),
                     Container(
-                      width: double.infinity,
-                      padding: const EdgeInsets.all(12),
+                      margin: const EdgeInsets.only(top: 2),
+                      width: 34,
+                      height: 34,
                       decoration: BoxDecoration(
-                        color: _eligibility!.isEligible
-                            ? const Color(0xFFE8FAF5)
-                            : const Color(0xFFFFF3E9),
-                        borderRadius: BorderRadius.circular(12),
+                        borderRadius: BorderRadius.circular(10),
+                        color: const Color(0xFF58B4A7),
                       ),
+                      child: const Icon(
+                        Icons.menu_rounded,
+                        color: Colors.white,
+                        size: 24,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 18),
+                _ScannerHeroCard(onScanPressed: _busy ? null : _scanPlateFromCamera),
+                const SizedBox(height: 18),
+                _DashboardTextField(
+                  controller: _plateCtrl,
+                  hintText: 'Type Vehicle Plate Number',
+                  icon: Icons.local_taxi_rounded,
+                  suffixIcon: Icons.keyboard_rounded,
+                ),
+                const SizedBox(height: 18),
+                _DashboardActionButton(
+                  label: 'Check Eligibility',
+                  onPressed: plateText.isEmpty || _loading ? null : _checkEligibility,
+                ),
+                const SizedBox(height: 28),
+                Row(
+                  children: [
+                    Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            _eligibility!.isEligible
-                                ? 'Eligible'
-                                : 'Not Eligible',
-                            style: TextStyle(
-                              fontWeight: FontWeight.w700,
-                              color: _eligibility!.isEligible
-                                  ? const Color(0xFF0A7C4A)
-                                  : const Color(0xFFB25000),
-                            ),
+                            'Amount (Littler)',
+                            style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                                  color: const Color(0xFF8D8D8D),
+                                  fontWeight: FontWeight.w600,
+                                ),
                           ),
-                          const SizedBox(height: 4),
-                          Text(_eligibility!.message),
-                          if (_eligibility!.hoursRemaining != null)
-                            Text(
-                              'Hours Remaining: ${_eligibility!.hoursRemaining}',
-                            ),
-                          if (_eligibility!.nextSlotStart != null &&
-                              _eligibility!.nextSlotEnd != null)
-                            Text(
-                              'Next Slot: ${formatter.format(_eligibility!.nextSlotStart!.toLocal())} - ${formatter.format(_eligibility!.nextSlotEnd!.toLocal())}',
-                            ),
+                          const SizedBox(height: 8),
+                          _DashboardCompactField(
+                            controller: _litersCtrl,
+                            text: '20 Liter',
+                            keyboardType: TextInputType.number,
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(width: 20),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Fuel Type',
+                            style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                                  color: const Color(0xFF8D8D8D),
+                                  fontWeight: FontWeight.w600,
+                                ),
+                          ),
+                          const SizedBox(height: 8),
+                          _DashboardCompactDropdown(
+                            value: _fuelType,
+                            onChanged: (value) => setState(() => _fuelType = value ?? 'Petrol'),
+                          ),
                         ],
                       ),
                     ),
                   ],
+                ),
+                const SizedBox(height: 24),
+                Text(
+                  'Station Name',
+                  style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                        color: const Color(0xFF8D8D8D),
+                        fontWeight: FontWeight.w600,
+                      ),
+                ),
+                const SizedBox(height: 8),
+                _DashboardTextField(
+                  controller: _stationCtrl,
+                  hintText: 'Main Pump',
+                  icon: Icons.storefront_rounded,
+                ),
+                const SizedBox(height: 28),
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: _DashboardActionButton(
+                    label: 'Record Entry',
+                    onPressed: _loading ? null : _recordFuel,
+                    width: 150,
+                  ),
+                ),
+                if (_eligibility != null) ...[
+                  const SizedBox(height: 20),
+                  _EligibilityBanner(
+                    eligibility: _eligibility!,
+                    formatter: formatter,
+                  ),
+                ],
                 ],
               ),
             ),
           ),
+        ),
+      ),
+    );
+  }
+}
+
+class _ScannerHeroCard extends StatelessWidget {
+  final VoidCallback? onScanPressed;
+
+  const _ScannerHeroCard({required this.onScanPressed});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      decoration: BoxDecoration(
+        color: const Color(0xFF58B4A7),
+        borderRadius: BorderRadius.circular(22),
+      ),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          GestureDetector(
+            onTap: onScanPressed,
+            child: Container(
+              width: 92,
+              height: 92,
+              decoration: BoxDecoration(
+                color: Colors.white.withValues(alpha: 0.12),
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(
+                  color: Colors.white.withValues(alpha: 0.28),
+                  width: 1.4,
+                ),
+              ),
+              child: const Icon(
+                Icons.qr_code_2_rounded,
+                color: Colors.white,
+                size: 58,
+              ),
+            ),
+          ),
+          const SizedBox(width: 14),
+          const Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  'Operator Scanner',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 28,
+                    fontWeight: FontWeight.w800,
+                    height: 1.0,
+                  ),
+                ),
+                SizedBox(height: 8),
+                Text(
+                  'Operator Scanner Operator Scanner ergerg\nOperator Scanner Operator Scanner',
+                  style: TextStyle(
+                    color: Color(0xFFF4FFFD),
+                    fontSize: 12,
+                    height: 1.25,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _DashboardTextField extends StatelessWidget {
+  final TextEditingController controller;
+  final String hintText;
+  final IconData icon;
+  final IconData? suffixIcon;
+
+  const _DashboardTextField({
+    required this.controller,
+    required this.hintText,
+    required this.icon,
+    this.suffixIcon,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(
+        color: const Color(0xFF58B4A7),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: TextField(
+        controller: controller,
+        textAlign: TextAlign.center,
+        style: const TextStyle(
+          color: Colors.white,
+          fontSize: 15,
+          fontWeight: FontWeight.w500,
+        ),
+        decoration: InputDecoration(
+          hintText: hintText,
+          hintStyle: const TextStyle(
+            color: Colors.white70,
+            fontSize: 15,
+            fontWeight: FontWeight.w500,
+          ),
+          prefixIcon: Icon(icon, color: Colors.white70),
+          suffixIcon: suffixIcon == null
+              ? null
+              : Icon(suffixIcon, color: Colors.white70),
+          border: InputBorder.none,
+          enabledBorder: InputBorder.none,
+          focusedBorder: InputBorder.none,
+          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+        ),
+      ),
+    );
+  }
+}
+
+class _DashboardCompactField extends StatelessWidget {
+  final TextEditingController controller;
+  final String text;
+  final TextInputType keyboardType;
+
+  const _DashboardCompactField({
+    required this.controller,
+    required this.text,
+    required this.keyboardType,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(
+        color: const Color(0xFF58B4A7),
+        borderRadius: BorderRadius.circular(10),
+      ),
+      child: TextField(
+        controller: controller,
+        keyboardType: keyboardType,
+        textAlign: TextAlign.center,
+        style: const TextStyle(color: Colors.white, fontSize: 15),
+        decoration: InputDecoration(
+          hintText: text,
+          hintStyle: const TextStyle(color: Colors.white70, fontSize: 15),
+          border: InputBorder.none,
+          contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+        ),
+      ),
+    );
+  }
+}
+
+class _DashboardCompactDropdown extends StatelessWidget {
+  final String value;
+  final ValueChanged<String?> onChanged;
+
+  const _DashboardCompactDropdown({
+    required this.value,
+    required this.onChanged,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(
+        color: const Color(0xFF58B4A7),
+        borderRadius: BorderRadius.circular(10),
+      ),
+      padding: const EdgeInsets.symmetric(horizontal: 8),
+      child: DropdownButtonFormField<String>(
+        initialValue: value,
+        onChanged: onChanged,
+        dropdownColor: const Color(0xFF58B4A7),
+        iconEnabledColor: Colors.white,
+        style: const TextStyle(color: Colors.white, fontSize: 15),
+        decoration: const InputDecoration(border: InputBorder.none),
+        items: const [
+          DropdownMenuItem(value: 'Petrol', child: Text('Fuel Type')),
+          DropdownMenuItem(value: 'Diesel', child: Text('Diesel')),
+          DropdownMenuItem(value: 'Octane', child: Text('Octane')),
+        ],
+      ),
+    );
+  }
+}
+
+class _DashboardActionButton extends StatelessWidget {
+  final String label;
+  final VoidCallback? onPressed;
+  final double? width;
+
+  const _DashboardActionButton({
+    required this.label,
+    required this.onPressed,
+    this.width,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final button = FilledButton(
+      onPressed: onPressed,
+      style: FilledButton.styleFrom(
+        minimumSize: const Size.fromHeight(46),
+        backgroundColor: const Color(0xFF58B4A7),
+        foregroundColor: Colors.white,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+      ),
+      child: Text(label, style: const TextStyle(fontSize: 16)),
+    );
+
+    if (width == null) {
+      return SizedBox(width: double.infinity, child: button);
+    }
+
+    return SizedBox(width: width, child: button);
+  }
+}
+
+class _EligibilityBanner extends StatelessWidget {
+  final EligibilityModel eligibility;
+  final DateFormat formatter;
+
+  const _EligibilityBanner({
+    required this.eligibility,
+    required this.formatter,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final background = eligibility.isEligible
+        ? const Color(0xFFE7F8F3)
+        : const Color(0xFFFFF1E4);
+    final accent = eligibility.isEligible
+        ? const Color(0xFF11835A)
+        : const Color(0xFFB85B1D);
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: background,
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            eligibility.isEligible ? 'Eligible' : 'Not Eligible',
+            style: TextStyle(
+              color: accent,
+              fontWeight: FontWeight.w800,
+              fontSize: 16,
+            ),
+          ),
+          const SizedBox(height: 6),
+          Text(eligibility.message),
+          if (eligibility.hoursRemaining != null) ...[
+            const SizedBox(height: 4),
+            Text('Hours Remaining: ${eligibility.hoursRemaining}'),
+          ],
+          if (eligibility.nextSlotStart != null && eligibility.nextSlotEnd != null) ...[
+            const SizedBox(height: 4),
+            Text(
+              'Next Slot: ${formatter.format(eligibility.nextSlotStart!.toLocal())} - ${formatter.format(eligibility.nextSlotEnd!.toLocal())}',
+            ),
+          ],
         ],
       ),
     );
@@ -1975,7 +2180,7 @@ class _OwnerDashboardState extends State<OwnerDashboard> {
               borderRadius: BorderRadius.circular(24),
               boxShadow: [
                 BoxShadow(
-                  color: const Color(0xFF0E7A6A).withOpacity(0.18),
+                  color: const Color(0xFF0E7A6A).withValues(alpha: 0.18),
                   blurRadius: 24,
                   offset: const Offset(0, 10),
                 ),
@@ -1988,7 +2193,7 @@ class _OwnerDashboardState extends State<OwnerDashboard> {
                   width: 56,
                   height: 56,
                   decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.16),
+                    color: Colors.white.withValues(alpha: 0.16),
                     borderRadius: BorderRadius.circular(16),
                   ),
                   child: const Icon(
