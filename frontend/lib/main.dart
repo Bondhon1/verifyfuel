@@ -1301,12 +1301,14 @@ class _HomeShellState extends State<HomeShell> {
     final api = ApiClient(token: widget.token);
     final role = widget.user.role;
     final tabs = <Widget>[
-      if (role == 'operator') OperatorDashboard(api: api),
-      if (role == 'owner') OwnerDashboard(api: api),
+      if (role == 'operator')
+        OperatorDashboard(api: api, onSignOut: widget.controller.signOut),
+      if (role == 'owner')
+        OperatorDashboard(api: api, onSignOut: widget.controller.signOut),
       if (role == 'admin') AdminDashboard(api: api),
     ];
 
-    final showAppBar = role != 'operator';
+    final showAppBar = role == 'admin';
 
     return Scaffold(
       appBar: showAppBar
@@ -1336,8 +1338,13 @@ class _HomeShellState extends State<HomeShell> {
 
 class OperatorDashboard extends StatefulWidget {
   final ApiClient api;
+  final VoidCallback? onSignOut;
 
-  const OperatorDashboard({super.key, required this.api});
+  const OperatorDashboard({
+    super.key,
+    required this.api,
+    this.onSignOut,
+  });
 
   @override
   State<OperatorDashboard> createState() => _OperatorDashboardState();
@@ -1425,8 +1432,9 @@ class _OperatorDashboardState extends State<OperatorDashboard> {
   Future<void> _scanPlateFromCamera() async {
     setState(() => _scanning = true);
     try {
+      final imageSource = kIsWeb ? ImageSource.gallery : ImageSource.camera;
       final pickedImage = await _imagePicker.pickImage(
-        source: ImageSource.camera,
+        source: imageSource,
         imageQuality: 90,
         maxWidth: 1600,
         maxHeight: 1200,
@@ -1438,12 +1446,14 @@ class _OperatorDashboardState extends State<OperatorDashboard> {
 
       await _processScannedImage(
         await pickedImage.readAsBytes(),
-        sourceLabel: 'camera image',
+        sourceLabel: kIsWeb ? 'selected image' : 'camera image',
       );
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Scan failed: $e - Please enter manually')),
+        SnackBar(
+          content: Text('Scanner failed: $e. You can type plate manually.'),
+        ),
       );
     } finally {
       if (mounted) {
@@ -1467,6 +1477,9 @@ class _OperatorDashboardState extends State<OperatorDashboard> {
       plateText = cloudResult.plateNumber;
       ocrSource = 'Google Vision';
     } catch (_) {
+      if (kIsWeb) {
+        throw Exception('Google Vision OCR is not available from backend');
+      }
       // Fall back to local OCR to keep scanning usable when cloud OCR is unavailable.
       recognizedText = await _recognizeTextFromImageBytes(imageBytes);
       plateText = _extractPlateText(recognizedText);
@@ -1474,7 +1487,7 @@ class _OperatorDashboardState extends State<OperatorDashboard> {
       usedLocalFallback = true;
     }
 
-    if (plateText.isEmpty && !usedLocalFallback) {
+    if (plateText.isEmpty && !usedLocalFallback && !kIsWeb) {
       final localRecognized = await _recognizeTextFromImageBytes(imageBytes);
       final localPlate = _extractPlateText(localRecognized);
       if (localPlate.isNotEmpty) {
@@ -1665,144 +1678,157 @@ class _OperatorDashboardState extends State<OperatorDashboard> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Expanded(
-                      child: Text(
-                        'VerifyFuel',
-                        style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                              fontWeight: FontWeight.w800,
-                              color: const Color(0xFF2E2E2E),
-                              letterSpacing: -0.6,
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Expanded(
+                        child: Text(
+                          'VerifyFuel',
+                          style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                                fontWeight: FontWeight.w800,
+                                color: const Color(0xFF404040),
+                                letterSpacing: -0.7,
+                                fontSize: 28,
+                              ),
+                        ),
+                      ),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.end,
+                        children: [
+                          Text(
+                            'Account Name',
+                            style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                                  color: const Color(0xFF4E4E4E),
+                                  fontWeight: FontWeight.w700,
+                                  fontSize: 12,
+                                ),
+                          ),
+                          Text(
+                            'Operator',
+                            style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                                  color: const Color(0xFF4E4E4E),
+                                  fontWeight: FontWeight.w700,
+                                  fontSize: 10,
+                                ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(width: 10),
+                      Container(
+                        margin: const EdgeInsets.only(top: 2),
+                        width: 34,
+                        height: 34,
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(9),
+                          color: const Color(0xFF5AB4A7),
+                        ),
+                        child: IconButton(
+                          padding: EdgeInsets.zero,
+                          tooltip: 'Sign out',
+                          onPressed: widget.onSignOut,
+                          icon: const Icon(
+                            Icons.logout_rounded,
+                            color: Colors.white,
+                            size: 20,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 24),
+                  _ScannerHeroCard(onScanPressed: _busy ? null : _scanPlateFromCamera),
+                  const SizedBox(height: 18),
+                  _DashboardPillField(
+                    controller: _plateCtrl,
+                    hintText: 'Type Vehicle Plate Number',
+                    textColor: const Color(0xFF1F1F1F),
+                    hintColor: const Color(0xFF2F2F2F),
+                  ),
+                  const SizedBox(height: 18),
+                  _DashboardPillButton(
+                    label: 'Check Eligibility',
+                    onPressed: plateText.isEmpty || _loading ? null : _checkEligibility,
+                  ),
+                  const SizedBox(height: 56),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Amount (Littler)',
+                              style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                                    color: const Color(0xFF9A9A9A),
+                                    fontWeight: FontWeight.w500,
+                                    fontSize: 14,
+                                  ),
                             ),
-                      ),
-                    ),
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.end,
-                      children: [
-                        Text(
-                          'Account Name',
-                          style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                                color: const Color(0xFF5E5E5E),
-                                fontWeight: FontWeight.w700,
-                              ),
+                            const SizedBox(height: 8),
+                            _DashboardPillField(
+                              controller: _litersCtrl,
+                              hintText: '20 Liter',
+                              textColor: const Color(0xFF1F1F1F),
+                              hintColor: const Color(0xFF2F2F2F),
+                            ),
+                          ],
                         ),
-                        Text(
-                          'Operator',
-                          style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                                color: const Color(0xFF5E5E5E),
-                                fontWeight: FontWeight.w700,
-                              ),
+                      ),
+                      const SizedBox(width: 22),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Fuel Type',
+                              style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                                    color: const Color(0xFF9A9A9A),
+                                    fontWeight: FontWeight.w500,
+                                    fontSize: 14,
+                                  ),
+                            ),
+                            const SizedBox(height: 8),
+                            _DashboardPillDropdown(
+                              value: _fuelType,
+                              onChanged: (value) => setState(() => _fuelType = value ?? 'Petrol'),
+                            ),
+                          ],
                         ),
-                      ],
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 24),
+                  Text(
+                    'Station Name',
+                    style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                          color: const Color(0xFFC0C0C0),
+                          fontWeight: FontWeight.w500,
+                          fontSize: 14,
+                        ),
+                  ),
+                  const SizedBox(height: 8),
+                  _DashboardPillField(
+                    controller: _stationCtrl,
+                    hintText: 'Main Pump',
+                    textColor: const Color(0xFF1F1F1F),
+                    hintColor: const Color(0xFF2F2F2F),
+                  ),
+                  const SizedBox(height: 28),
+                  Align(
+                    alignment: Alignment.centerLeft,
+                    child: _DashboardPillButton(
+                      label: 'Record Entry',
+                      onPressed: _loading ? null : _recordFuel,
+                      width: 148,
                     ),
-                    const SizedBox(width: 10),
-                    Container(
-                      margin: const EdgeInsets.only(top: 2),
-                      width: 34,
-                      height: 34,
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(10),
-                        color: const Color(0xFF58B4A7),
-                      ),
-                      child: const Icon(
-                        Icons.menu_rounded,
-                        color: Colors.white,
-                        size: 24,
-                      ),
+                  ),
+                  if (_eligibility != null) ...[
+                    const SizedBox(height: 20),
+                    _EligibilityBanner(
+                      eligibility: _eligibility!,
+                      formatter: formatter,
                     ),
                   ],
-                ),
-                const SizedBox(height: 18),
-                _ScannerHeroCard(onScanPressed: _busy ? null : _scanPlateFromCamera),
-                const SizedBox(height: 18),
-                _DashboardTextField(
-                  controller: _plateCtrl,
-                  hintText: 'Type Vehicle Plate Number',
-                  icon: Icons.local_taxi_rounded,
-                  suffixIcon: Icons.keyboard_rounded,
-                ),
-                const SizedBox(height: 18),
-                _DashboardActionButton(
-                  label: 'Check Eligibility',
-                  onPressed: plateText.isEmpty || _loading ? null : _checkEligibility,
-                ),
-                const SizedBox(height: 28),
-                Row(
-                  children: [
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Amount (Littler)',
-                            style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                                  color: const Color(0xFF8D8D8D),
-                                  fontWeight: FontWeight.w600,
-                                ),
-                          ),
-                          const SizedBox(height: 8),
-                          _DashboardCompactField(
-                            controller: _litersCtrl,
-                            text: '20 Liter',
-                            keyboardType: TextInputType.number,
-                          ),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(width: 20),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Fuel Type',
-                            style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                                  color: const Color(0xFF8D8D8D),
-                                  fontWeight: FontWeight.w600,
-                                ),
-                          ),
-                          const SizedBox(height: 8),
-                          _DashboardCompactDropdown(
-                            value: _fuelType,
-                            onChanged: (value) => setState(() => _fuelType = value ?? 'Petrol'),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 24),
-                Text(
-                  'Station Name',
-                  style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                        color: const Color(0xFF8D8D8D),
-                        fontWeight: FontWeight.w600,
-                      ),
-                ),
-                const SizedBox(height: 8),
-                _DashboardTextField(
-                  controller: _stationCtrl,
-                  hintText: 'Main Pump',
-                  icon: Icons.storefront_rounded,
-                ),
-                const SizedBox(height: 28),
-                Align(
-                  alignment: Alignment.centerLeft,
-                  child: _DashboardActionButton(
-                    label: 'Record Entry',
-                    onPressed: _loading ? null : _recordFuel,
-                    width: 150,
-                  ),
-                ),
-                if (_eligibility != null) ...[
-                  const SizedBox(height: 20),
-                  _EligibilityBanner(
-                    eligibility: _eligibility!,
-                    formatter: formatter,
-                  ),
-                ],
                 ],
               ),
             ),
@@ -1823,30 +1849,30 @@ class _ScannerHeroCard extends StatelessWidget {
     return Container(
       width: double.infinity,
       decoration: BoxDecoration(
-        color: const Color(0xFF58B4A7),
-        borderRadius: BorderRadius.circular(22),
+        color: const Color(0xFF5AB4A7),
+        borderRadius: BorderRadius.circular(18),
       ),
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           GestureDetector(
             onTap: onScanPressed,
             child: Container(
-              width: 92,
-              height: 92,
+              width: 88,
+              height: 88,
               decoration: BoxDecoration(
-                color: Colors.white.withValues(alpha: 0.12),
-                borderRadius: BorderRadius.circular(16),
+                color: Colors.transparent,
+                borderRadius: BorderRadius.circular(12),
                 border: Border.all(
-                  color: Colors.white.withValues(alpha: 0.28),
-                  width: 1.4,
+                  color: Colors.white,
+                  width: 1.6,
                 ),
               ),
               child: const Icon(
                 Icons.qr_code_2_rounded,
                 color: Colors.white,
-                size: 58,
+                size: 56,
               ),
             ),
           ),
@@ -1860,18 +1886,18 @@ class _ScannerHeroCard extends StatelessWidget {
                   'Operator Scanner',
                   style: TextStyle(
                     color: Colors.white,
-                    fontSize: 28,
-                    fontWeight: FontWeight.w800,
+                    fontSize: 25,
+                    fontWeight: FontWeight.w700,
                     height: 1.0,
                   ),
                 ),
                 SizedBox(height: 8),
                 Text(
-                  'Operator Scanner Operator Scanner ergerg\nOperator Scanner Operator Scanner',
+                  'Operator Scanner Operator Scanner ergwerg\nOperator Scanner Operator Scanner',
                   style: TextStyle(
                     color: Color(0xFFF4FFFD),
-                    fontSize: 12,
-                    height: 1.25,
+                    fontSize: 11,
+                    height: 1.2,
                     fontWeight: FontWeight.w500,
                   ),
                 ),
@@ -1884,94 +1910,56 @@ class _ScannerHeroCard extends StatelessWidget {
   }
 }
 
-class _DashboardTextField extends StatelessWidget {
+class _DashboardPillField extends StatelessWidget {
   final TextEditingController controller;
   final String hintText;
-  final IconData icon;
-  final IconData? suffixIcon;
+  final Color textColor;
+  final Color hintColor;
 
-  const _DashboardTextField({
+  const _DashboardPillField({
     required this.controller,
     required this.hintText,
-    required this.icon,
-    this.suffixIcon,
+    required this.textColor,
+    required this.hintColor,
   });
 
   @override
   Widget build(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
-        color: const Color(0xFF58B4A7),
-        borderRadius: BorderRadius.circular(12),
+        color: const Color(0xFF5AB4A7),
+        borderRadius: BorderRadius.circular(9),
       ),
       child: TextField(
         controller: controller,
         textAlign: TextAlign.center,
-        style: const TextStyle(
-          color: Colors.white,
+        style: TextStyle(
+          color: textColor,
           fontSize: 15,
           fontWeight: FontWeight.w500,
         ),
         decoration: InputDecoration(
           hintText: hintText,
-          hintStyle: const TextStyle(
-            color: Colors.white70,
+          hintStyle: TextStyle(
+            color: hintColor,
             fontSize: 15,
             fontWeight: FontWeight.w500,
           ),
-          prefixIcon: Icon(icon, color: Colors.white70),
-          suffixIcon: suffixIcon == null
-              ? null
-              : Icon(suffixIcon, color: Colors.white70),
           border: InputBorder.none,
           enabledBorder: InputBorder.none,
           focusedBorder: InputBorder.none,
-          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
         ),
       ),
     );
   }
 }
 
-class _DashboardCompactField extends StatelessWidget {
-  final TextEditingController controller;
-  final String text;
-  final TextInputType keyboardType;
-
-  const _DashboardCompactField({
-    required this.controller,
-    required this.text,
-    required this.keyboardType,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        color: const Color(0xFF58B4A7),
-        borderRadius: BorderRadius.circular(10),
-      ),
-      child: TextField(
-        controller: controller,
-        keyboardType: keyboardType,
-        textAlign: TextAlign.center,
-        style: const TextStyle(color: Colors.white, fontSize: 15),
-        decoration: InputDecoration(
-          hintText: text,
-          hintStyle: const TextStyle(color: Colors.white70, fontSize: 15),
-          border: InputBorder.none,
-          contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
-        ),
-      ),
-    );
-  }
-}
-
-class _DashboardCompactDropdown extends StatelessWidget {
+class _DashboardPillDropdown extends StatelessWidget {
   final String value;
   final ValueChanged<String?> onChanged;
 
-  const _DashboardCompactDropdown({
+  const _DashboardPillDropdown({
     required this.value,
     required this.onChanged,
   });
@@ -1980,17 +1968,19 @@ class _DashboardCompactDropdown extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
-        color: const Color(0xFF58B4A7),
-        borderRadius: BorderRadius.circular(10),
+        color: const Color(0xFF5AB4A7),
+        borderRadius: BorderRadius.circular(9),
       ),
-      padding: const EdgeInsets.symmetric(horizontal: 8),
       child: DropdownButtonFormField<String>(
         initialValue: value,
         onChanged: onChanged,
-        dropdownColor: const Color(0xFF58B4A7),
-        iconEnabledColor: Colors.white,
-        style: const TextStyle(color: Colors.white, fontSize: 15),
-        decoration: const InputDecoration(border: InputBorder.none),
+        dropdownColor: const Color(0xFF5AB4A7),
+        iconEnabledColor: const Color(0xFF1F1F1F),
+        style: const TextStyle(color: Color(0xFF1F1F1F), fontSize: 15),
+        decoration: const InputDecoration(
+          border: InputBorder.none,
+          contentPadding: EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+        ),
         items: const [
           DropdownMenuItem(value: 'Petrol', child: Text('Fuel Type')),
           DropdownMenuItem(value: 'Diesel', child: Text('Diesel')),
@@ -2001,12 +1991,12 @@ class _DashboardCompactDropdown extends StatelessWidget {
   }
 }
 
-class _DashboardActionButton extends StatelessWidget {
+class _DashboardPillButton extends StatelessWidget {
   final String label;
   final VoidCallback? onPressed;
   final double? width;
 
-  const _DashboardActionButton({
+  const _DashboardPillButton({
     required this.label,
     required this.onPressed,
     this.width,
@@ -2014,15 +2004,25 @@ class _DashboardActionButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final button = FilledButton(
-      onPressed: onPressed,
-      style: FilledButton.styleFrom(
-        minimumSize: const Size.fromHeight(46),
-        backgroundColor: const Color(0xFF58B4A7),
-        foregroundColor: Colors.white,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+    final button = SizedBox(
+      height: 44,
+      child: TextButton(
+        onPressed: onPressed,
+        style: TextButton.styleFrom(
+          backgroundColor: const Color(0xFF5AB4A7),
+          foregroundColor: Colors.white,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(8),
+          ),
+        ),
+        child: Text(
+          label,
+          style: const TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.w500,
+          ),
+        ),
       ),
-      child: Text(label, style: const TextStyle(fontSize: 16)),
     );
 
     if (width == null) {
